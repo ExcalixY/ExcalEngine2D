@@ -14,22 +14,39 @@ enum class FullscreenState {
 struct WindowSpec {
   glm::ivec2 size = {1280, 720};
   FullscreenState fullscreenState = FullscreenState::BORDERLESS;
-  bool vsync = false;
+  bool allowResize = false;
+  bool alwaysOnTop = false;
 };
 
 struct RendererSpec {
   glm::ivec2 size = {1280, 720};
   bool sameAsWindow = true;
-  bool vsync = false;
+  bool vsync = true;
+  bool renderOutOfFocus = false;
 };
+
+struct AssetSpec {
+  std::string directory = "Assets";
+};
+
+struct TimeSpec {
+  float maxDelta = 0.02f;
+};
+
+struct InputSpec { };
+
+struct EventSpec { };
 
 struct ApplicationSpec {
   std::string name = "ExcalEngine Game";
+  bool runOutOfFocus = false;
 
   WindowSpec windowSpec = {};
   RendererSpec rendererSpec = {};
-
-  float maxDelta = 0.02;
+  AssetSpec assetSpec = {};
+  TimeSpec timeSpec = {};
+  InputSpec inputSpec = {};
+  EventSpec eventSpec = {};
 };
 
 }

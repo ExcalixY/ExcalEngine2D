@@ -2,6 +2,7 @@
 
 #include <concepts>
 
+#include "Events/WindowShouldCloseEvent.hpp"
 #include "ExcalCore/ApplicationSpec.hpp"
 #include "ExcalCore/EngineInitializer.hpp"
 #include "ExcalCore/Layers/LayerStack.hpp"
@@ -33,6 +34,10 @@ public:
     m_Layers.PushOverlay(new T(std::forward<TArgs>(args)...));
   }
 
+  void OnEvent(const WindowShouldCloseEvent& e) {
+    m_Running = false;
+  }
+
   const ApplicationSpec& GetSpec() const;
 
   Window& GetWindow();
@@ -46,17 +51,14 @@ private:
   ApplicationSpec m_Spec;
 
   EngineInitializer m_Initializer;
-
-  EventSystem m_Events;
-
   Window m_Window;
   Renderer2D m_Renderer;
-
   AssetManager m_Assets;
   TimeSystem m_Time;
   InputSystem m_Input;
-
   LayerStack m_Layers;
+
+  EventSystem m_Events;
 
   bool m_Running;
 };

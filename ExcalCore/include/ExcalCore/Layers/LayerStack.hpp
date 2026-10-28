@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "ExcalCore/ApplicationSpec.hpp"
 #include "ExcalCore/Rendering/Renderer2D.hpp"
 #include "Layer.hpp"
 
@@ -9,7 +10,7 @@ namespace ExcalCore {
 
 class LayerStack {
 public:
-  explicit LayerStack();
+  explicit LayerStack(ApplicationSpec& spec);
   ~LayerStack();
 
   void PushLayer(Layer* layer);

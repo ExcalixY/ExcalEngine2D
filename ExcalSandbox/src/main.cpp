@@ -3,7 +3,9 @@
 #include <ExcalCore/Utils/Logging.hpp>
 
 int main(int argc, char* argv[]) {
-  ExcalCore::ApplicationSpec spec = {};
+  ExcalCore::ApplicationSpec spec = {
+    .windowSpec = {.fullscreenState = ExcalCore::FullscreenState::WINDOWED}
+  };
   ExcalCore::Application app = ExcalCore::Application(spec);
 
   try {

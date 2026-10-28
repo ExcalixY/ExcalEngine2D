@@ -3,12 +3,13 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "ApplicationSpec.hpp"
 #include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
 struct EngineInitializer {
-  EngineInitializer() {
+  explicit EngineInitializer(ApplicationSpec& spec) {
     Debug::InitLogging("log.txt");
     Debug::Log("Initialized Logging System...");
 

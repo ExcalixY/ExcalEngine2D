@@ -3,7 +3,8 @@
 #include <ranges>
 
 namespace ExcalCore {
-LayerStack::LayerStack() : m_Layers(0), m_InsertIndex(0) { }
+LayerStack::LayerStack(ApplicationSpec& spec)
+    : m_Layers(0), m_InsertIndex(0) { }
 
 LayerStack::~LayerStack() {
   for (Layer* l : m_Layers) {

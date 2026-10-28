@@ -35,7 +35,7 @@ public:
   template <typename T>
   bool HasComponent() const;
 
-private:
+protected:
   friend class Scene;
 
   std::string m_Name;

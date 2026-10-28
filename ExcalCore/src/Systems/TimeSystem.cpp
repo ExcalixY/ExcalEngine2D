@@ -7,7 +7,7 @@
 namespace ExcalCore {
 
 TimeSystem::TimeSystem(const ApplicationSpec& spec)
-    : m_MaxDeltaTime(spec.maxDelta) {
+    : m_MaxDeltaTime(spec.timeSpec.maxDelta) {
   Debug::Log("Initializing Time System...");
 
   m_LastTick = SDL_GetTicksNS();

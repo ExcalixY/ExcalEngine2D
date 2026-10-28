@@ -8,10 +8,14 @@ namespace ExcalCore {
 
 Application::Application(ApplicationSpec spec)
     : m_Spec(spec),
-      m_Initializer(),
+      m_Initializer(m_Spec),
       m_Window(m_Spec),
       m_Renderer(m_Spec, m_Window),
-      m_Time(m_Spec) { }
+      m_Assets(m_Spec),
+      m_Time(m_Spec),
+      m_Input(m_Spec),
+      m_Layers(m_Spec),
+      m_Events(m_Spec) { }
 
 void Application::Run() {
   Debug::Log("Starting Runtime Loop...");
@@ -20,24 +24,23 @@ void Application::Run() {
 
   m_Time.Reset();
 
-  SDL_Event e;
-
   while (m_Running) {
+    // Update Time
     m_Time.Tick();
 
-    while (SDL_PollEvent(&e)) {
-      if (e.type == SDL_EVENT_QUIT) {
-        m_Running = false;
-      }
-    }
+    // Update Events
+    m_Input.BeginFrame();
+    m_Events.PollEvents([&](const auto& event) {
+      m_Events.DispatchEvent(event, *this, m_Window, m_Renderer, m_Input);
+    });
 
     // Update Loop
     m_Layers.OnUpdate(m_Time.GetDeltaTime());
 
     // Rendering Loop
-    SDL_RenderClear(m_Renderer.GetRendererRaw());
+    m_Renderer.BeginFrame();
     m_Layers.OnRender(m_Renderer);
-    SDL_RenderPresent(m_Renderer.GetRendererRaw());
+    m_Renderer.EndFrame();
   }
 }
 

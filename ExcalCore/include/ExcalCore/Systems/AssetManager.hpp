@@ -3,6 +3,7 @@
 #include <memory>
 #include <tuple>
 
+#include "ExcalCore/ApplicationSpec.hpp"
 #include "ExcalCore/Assets/AssetCache.hpp"
 #include "ExcalCore/Assets/AudioClip.hpp"
 #include "ExcalCore/Assets/FontAsset.hpp"
@@ -12,6 +13,9 @@ namespace ExcalCore {
 
 class AssetManager final {
 public:
+  explicit AssetManager(ApplicationSpec& spec)
+      : m_AssetDir(spec.assetSpec.directory) { }
+
   template <typename T, typename... Args>
   std::shared_ptr<T> LoadAsset(const std::string& path, Args&&... args) {
     return std::get<AssetCache<T>>(m_Caches).LoadAsset(
@@ -25,6 +29,8 @@ private:
     AssetCache<TextureAsset>,
     AssetCache<FontAsset>>
     m_Caches;
+
+  std::string m_AssetDir;
 };
 
 }

@@ -4,6 +4,7 @@
 #include <SDL3/SDL_video.h>
 
 #include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Events/WindowResizeEvent.hpp"
 
 namespace ExcalCore {
 
@@ -15,6 +16,8 @@ public:
   SDL_Window* GetWindowRaw() {
     return m_Window;
   }
+
+  void OnEvent(const WindowResizeEvent& e);
 
 private:
   ApplicationSpec& m_Spec;
