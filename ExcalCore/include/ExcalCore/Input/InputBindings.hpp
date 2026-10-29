@@ -27,22 +27,22 @@ enum class MouseVector {
 };
 
 struct KeySource {
-  KeySource() = default;
-  KeySource(KeyCode key) : key(key) { }
+  KeySource();
+  KeySource(KeyCode key);
 
   KeyCode key = KeyCode::UNKNOWN;
 };
 
 struct MouseButtonSource {
-  MouseButtonSource() = default;
-  MouseButtonSource(MouseButton button) : button(button) { }
+  MouseButtonSource();
+  MouseButtonSource(MouseButton button);
 
   MouseButton button = MouseButton::LEFT;
 };
 
 struct MouseScrollSource {
-  MouseScrollSource() = default;
-  MouseScrollSource(ScrollDirection direction) : direction(direction) { }
+  MouseScrollSource();
+  MouseScrollSource(ScrollDirection direction);
 
   ScrollDirection direction = ScrollDirection::UP;
 };
@@ -74,60 +74,64 @@ struct ButtonComposite3D {
 };
 
 struct BindingButton {
-  BindingButton() = default;
+  BindingButton();
 
   template <typename... TSources>
-    requires(sizeof...(TSources) > 0
-             && (std::constructible_from<ButtonSource, TSources> && ...))
-  explicit BindingButton(TSources... sources)
-      : sources{ButtonSource(sources)...} { }
+    requires(
+      sizeof...(TSources) > 0 &&
+      (std::constructible_from<ButtonSource, TSources> && ...)
+    )
+  explicit BindingButton(TSources... sources);
 
-  BindingButton(std::initializer_list<ButtonSource> sources)
-      : sources(sources) { }
+  BindingButton(std::initializer_list<ButtonSource> sources);
 
-  explicit BindingButton(ButtonSources sources) : sources(std::move(sources)) { }
+  explicit BindingButton(ButtonSources sources);
 
   ButtonSources sources;
 };
 
+template <typename... TSources>
+  requires(
+    sizeof...(TSources) > 0 &&
+    (std::constructible_from<ButtonSource, TSources> && ...)
+  )
+BindingButton::BindingButton(TSources... sources)
+    : sources{ButtonSource(sources)...} { }
+
 struct BindingAxis {
-  BindingAxis() = default;
+  BindingAxis();
 
-  BindingAxis(ButtonSource negative, ButtonSource positive)
-      : negative{negative}, positive{positive} { }
+  BindingAxis(ButtonSource negative, ButtonSource positive);
 
-  BindingAxis(ButtonSources negative, ButtonSources positive)
-      : negative(std::move(negative)), positive(std::move(positive)) { }
+  BindingAxis(ButtonSources negative, ButtonSources positive);
 
   ButtonSources negative;
   ButtonSources positive;
 };
 
 struct BindingAxis2D {
-  BindingAxis2D() = default;
+  BindingAxis2D();
 
   BindingAxis2D(
     ButtonSource up, ButtonSource down, ButtonSource left, ButtonSource right
-  )
-      : source(ButtonComposite2D{{up}, {down}, {left}, {right}}) { }
+  );
 
   BindingAxis2D(
-    ButtonSources up, ButtonSources down, ButtonSources left, ButtonSources right
-  )
-      : source(ButtonComposite2D{
-          std::move(up), std::move(down), std::move(left), std::move(right)
-        }) { }
+    ButtonSources up,
+    ButtonSources down,
+    ButtonSources left,
+    ButtonSources right
+  );
 
-  explicit BindingAxis2D(ButtonComposite2D composite)
-      : source(std::move(composite)) { }
+  explicit BindingAxis2D(ButtonComposite2D composite);
 
-  explicit BindingAxis2D(MouseVector vector) : source(vector) { }
+  explicit BindingAxis2D(MouseVector vector);
 
   std::variant<ButtonComposite2D, MouseVector> source;
 };
 
 struct BindingAxis3D {
-  BindingAxis3D() = default;
+  BindingAxis3D();
 
   BindingAxis3D(
     ButtonSource up,
@@ -136,8 +140,7 @@ struct BindingAxis3D {
     ButtonSource right,
     ButtonSource forward,
     ButtonSource backward
-  )
-      : source{{up}, {down}, {left}, {right}, {forward}, {backward}} { }
+  );
 
   BindingAxis3D(
     ButtonSources up,
@@ -146,18 +149,9 @@ struct BindingAxis3D {
     ButtonSources right,
     ButtonSources forward,
     ButtonSources backward
-  )
-      : source{
-          std::move(up),
-          std::move(down),
-          std::move(left),
-          std::move(right),
-          std::move(forward),
-          std::move(backward),
-        } { }
+  );
 
-  explicit BindingAxis3D(ButtonComposite3D composite)
-      : source(std::move(composite)) { }
+  explicit BindingAxis3D(ButtonComposite3D composite);
 
   ButtonComposite3D source;
 };
@@ -167,7 +161,7 @@ using InputBinding =
 
 template <typename T>
 concept InputBindingType =
-  std::same_as<T, BindingButton> || std::same_as<T, BindingAxis>
-  || std::same_as<T, BindingAxis2D> || std::same_as<T, BindingAxis3D>;
+  std::same_as<T, BindingButton> || std::same_as<T, BindingAxis> ||
+  std::same_as<T, BindingAxis2D> || std::same_as<T, BindingAxis3D>;
 
 }

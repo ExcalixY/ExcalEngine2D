@@ -1,3 +1,8 @@
 #include "ExcalCore/Systems/AssetManager.hpp"
 
-namespace ExcalCore { }
+namespace ExcalCore {
+
+AssetManager::AssetManager(ApplicationSpec& spec)
+    : m_AssetDir(spec.assetSpec.directory) { }
+
+}

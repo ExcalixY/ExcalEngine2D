@@ -24,19 +24,13 @@ public:
 
   template <typename T, typename... TArgs>
     requires std::derived_from<T, Layer>
-  void PushLayer(TArgs&&... args) {
-    m_Layers.PushLayer(new T(std::forward<TArgs>(args)...));
-  }
+  void PushLayer(TArgs&&... args);
 
   template <typename T, typename... TArgs>
     requires std::derived_from<T, Layer>
-  void PushOverlay(TArgs&&... args) {
-    m_Layers.PushOverlay(new T(std::forward<TArgs>(args)...));
-  }
+  void PushOverlay(TArgs&&... args);
 
-  void OnEvent(const WindowShouldCloseEvent& e) {
-    m_Running = false;
-  }
+  void OnEvent(const WindowShouldCloseEvent& e);
 
   const ApplicationSpec& GetSpec() const;
 
@@ -62,5 +56,17 @@ private:
 
   bool m_Running;
 };
+
+template <typename T, typename... TArgs>
+  requires std::derived_from<T, Layer>
+void Application::PushLayer(TArgs&&... args) {
+  m_Layers.PushLayer(new T(std::forward<TArgs>(args)...));
+}
+
+template <typename T, typename... TArgs>
+  requires std::derived_from<T, Layer>
+void Application::PushOverlay(TArgs&&... args) {
+  m_Layers.PushOverlay(new T(std::forward<TArgs>(args)...));
+}
 
 }

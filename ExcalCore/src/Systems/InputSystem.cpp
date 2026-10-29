@@ -205,6 +205,10 @@ const glm::vec2& InputSystem::GetMouseScroll() const {
   return m_MouseScroll;
 }
 
+size_t InputSystem::StringHash::operator()(std::string_view value) const {
+  return std::hash<std::string_view>{}(value);
+}
+
 template <typename TBinding>
 const TBinding* InputSystem::FindBinding(std::string_view name) const {
   auto it = m_Bindings.find(name);

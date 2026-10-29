@@ -13,9 +13,7 @@ public:
   explicit Window(ApplicationSpec& spec);
   ~Window();
 
-  SDL_Window* GetWindowRaw() {
-    return m_Window;
-  }
+  SDL_Window* GetWindowRaw();
 
   void OnEvent(const WindowResizeEvent& e);
 

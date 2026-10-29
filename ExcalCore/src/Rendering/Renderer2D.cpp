@@ -27,6 +27,10 @@ Renderer2D::Renderer2D(ApplicationSpec& spec, Window& window) : m_Spec(spec) {
   SDL_SetRenderVSync(m_Renderer, spec.rendererSpec.vsync);
 }
 
+SDL_Renderer* Renderer2D::GetRendererRaw() {
+  return m_Renderer;
+}
+
 SDL_Texture* Renderer2D::GetTextureFromSurface(SDL_Surface* surface) {
   auto it = m_Textures.find(surface);
 

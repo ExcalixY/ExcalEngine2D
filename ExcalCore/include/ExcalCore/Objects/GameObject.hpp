@@ -1,16 +1,13 @@
 #pragma once
 
-#include <concepts>
-#include <memory>
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "Components/Component.hpp"
+#include "ExcalCore/ECS/ECSRegistry.hpp"
+#include "ExcalCore/ECS/Entity.hpp"
 
 namespace ExcalCore {
 
-class GameObject {
+class GameObject final {
 public:
   virtual ~GameObject() = default;
 
@@ -21,51 +18,35 @@ public:
   virtual void OnEnabled() { }
   virtual void OnDisabled() { }
 
-  const std::string& GetName() const {
-    return m_Name;
-  }
+  const std::string& GetName() const;
 
-  template <typename T, typename... TArgs>
-    requires std::derived_from<T, ComponentBase>
+  template <ComponentType T, typename... TArgs>
   T* AddComponent(TArgs&&... args);
 
-  template <typename T>
+  template <ComponentType T>
   T* GetComponent() const;
 
-  template <typename T>
+  template <ComponentType T>
   bool HasComponent() const;
 
 protected:
   friend class Scene;
 
   std::string m_Name;
-  std::vector<std::unique_ptr<ComponentBase>> m_Components;
+  Entity m_EntityHandle;
 };
 
-template <typename T, typename... TArgs>
-  requires std::derived_from<T, ComponentBase>
+template <ComponentType T, typename... TArgs>
 T* GameObject::AddComponent(TArgs&&... args) {
-  auto component = std::make_unique<T>(std::forward<TArgs>(args)...);
-  T* raw = component.get();
-
-  raw->m_Owner = this;
-  m_Components.push_back(std::move(component));
-
-  raw->OnAttach();
-  return raw;
-}
-
-template <typename T>
-T* GameObject::GetComponent() const {
-  for (const auto& component : m_Components) {
-    if (auto* found = dynamic_cast<T*>(component.get())) {
-      return found;
-    }
-  }
   return nullptr;
 }
 
-template <typename T>
+template <ComponentType T>
+T* GameObject::GetComponent() const {
+  return nullptr;
+}
+
+template <ComponentType T>
 bool GameObject::HasComponent() const {
   return GetComponent<T>() != nullptr;
 }

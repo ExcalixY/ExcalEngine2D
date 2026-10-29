@@ -109,12 +109,19 @@ struct LogFormat {
   consteval LogFormat(
     const T& string,
     std::source_location location = std::source_location::current()
-  )
-      : format(string), location(location) { }
+  );
 
   std::format_string<TArgs...> format;
   std::source_location location;
 };
+
+template <typename... TArgs>
+template <typename T>
+  requires std::convertible_to<const T&, std::string_view>
+consteval LogFormat<TArgs...>::LogFormat(
+  const T& string, std::source_location location
+)
+    : format(string), location(location) { }
 
 // type_identity keeps the arguments, not the format string, deciding TArgs
 template <typename... TArgs>
@@ -126,12 +133,18 @@ struct RuntimeLogFormat {
   RuntimeLogFormat(
     const T& string,
     std::source_location location = std::source_location::current()
-  )
-      : format(string), location(location) { }
+  );
 
   std::string_view format;
   std::source_location location;
 };
+
+template <typename T>
+  requires std::convertible_to<const T&, std::string_view>
+RuntimeLogFormat::RuntimeLogFormat(
+  const T& string, std::source_location location
+)
+    : format(string), location(location) { }
 
 void InitLogging(const std::string& filePath);
 void ShutdownLogging();

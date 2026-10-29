@@ -41,17 +41,11 @@ public:
 
   template <InputBindingType TBinding, typename... TArgs>
     requires std::constructible_from<TBinding, TArgs...>
-  void BindInput(std::string name, TArgs&&... args) {
-    BindInput(
-      std::move(name),
-      InputBinding(std::in_place_type<TBinding>, std::forward<TArgs>(args)...)
-    );
-  }
+  void BindInput(std::string name, TArgs&&... args);
 
   template <InputBindingType TBinding>
-  void BindInput(std::string name, std::type_identity_t<TBinding> binding) {
-    BindInput(std::move(name), InputBinding(std::move(binding)));
-  }
+  void BindInput(std::string name, std::type_identity_t<TBinding> binding);
+
   void UnbindInput(std::string_view name);
   bool HasBinding(std::string_view name) const;
 
@@ -76,9 +70,7 @@ private:
   struct StringHash {
     using is_transparent = void;
 
-    size_t operator()(std::string_view value) const {
-      return std::hash<std::string_view>{}(value);
-    }
+    size_t operator()(std::string_view value) const;
   };
 
   template <typename TBinding>
@@ -109,5 +101,21 @@ private:
   mutable std::unordered_set<std::string, StringHash, std::equal_to<>>
     m_WarnedBindings;
 };
+
+template <InputBindingType TBinding, typename... TArgs>
+  requires std::constructible_from<TBinding, TArgs...>
+void InputSystem::BindInput(std::string name, TArgs&&... args) {
+  BindInput(
+    std::move(name),
+    InputBinding(std::in_place_type<TBinding>, std::forward<TArgs>(args)...)
+  );
+}
+
+template <InputBindingType TBinding>
+void InputSystem::BindInput(
+  std::string name, std::type_identity_t<TBinding> binding
+) {
+  BindInput(std::move(name), InputBinding(std::move(binding)));
+}
 
 }

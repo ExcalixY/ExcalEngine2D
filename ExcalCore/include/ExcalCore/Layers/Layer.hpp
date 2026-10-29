@@ -8,7 +8,7 @@ namespace ExcalCore {
 
 class Layer {
 public:
-  explicit Layer(std::string name) : m_Name(std::move(name)) { }
+  explicit Layer(std::string name);
   virtual ~Layer() = default;
 
   virtual void OnAttach() { }
@@ -20,9 +20,7 @@ public:
 
   virtual void OnEvent() { }
 
-  const std::string& GetName() const {
-    return m_Name;
-  }
+  const std::string& GetName() const;
 
 private:
   std::string m_Name;

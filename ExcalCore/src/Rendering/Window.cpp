@@ -38,6 +38,10 @@ Window::~Window() {
   SDL_DestroyWindow(m_Window);
 }
 
+SDL_Window* Window::GetWindowRaw() {
+  return m_Window;
+}
+
 void Window::OnEvent(const WindowResizeEvent& e) {
   Debug::Log("Resized window: {}:{}", e.width, e.height);
 }

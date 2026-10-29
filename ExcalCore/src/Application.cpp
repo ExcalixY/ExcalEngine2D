@@ -46,6 +46,10 @@ void Application::Run() {
 
 Application::~Application() { }
 
+void Application::OnEvent(const WindowShouldCloseEvent& e) {
+  m_Running = false;
+}
+
 const ApplicationSpec& Application::GetSpec() const {
   return m_Spec;
 }

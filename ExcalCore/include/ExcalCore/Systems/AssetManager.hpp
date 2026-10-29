@@ -13,15 +13,10 @@ namespace ExcalCore {
 
 class AssetManager final {
 public:
-  explicit AssetManager(ApplicationSpec& spec)
-      : m_AssetDir(spec.assetSpec.directory) { }
+  explicit AssetManager(ApplicationSpec& spec);
 
   template <typename T, typename... Args>
-  std::shared_ptr<T> LoadAsset(const std::string& path, Args&&... args) {
-    return std::get<AssetCache<T>>(m_Caches).LoadAsset(
-      path, std::forward<Args>(args)...
-    );
-  }
+  std::shared_ptr<T> LoadAsset(const std::string& path, Args&&... args);
 
 private:
   std::tuple<
@@ -32,5 +27,14 @@ private:
 
   std::string m_AssetDir;
 };
+
+template <typename T, typename... Args>
+std::shared_ptr<T> AssetManager::LoadAsset(
+  const std::string& path, Args&&... args
+) {
+  return std::get<AssetCache<T>>(m_Caches).LoadAsset(
+    path, std::forward<Args>(args)...
+  );
+}
 
 }

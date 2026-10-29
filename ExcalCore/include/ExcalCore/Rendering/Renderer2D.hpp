@@ -17,9 +17,7 @@ public:
   explicit Renderer2D(ApplicationSpec& spec, Window& window);
   ~Renderer2D();
 
-  SDL_Renderer* GetRendererRaw() {
-    return m_Renderer;
-  }
+  SDL_Renderer* GetRendererRaw();
 
   void BeginFrame();
   void SubmitDrawCommand(const DrawCommand& command);
