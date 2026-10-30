@@ -61,7 +61,7 @@ void LayerStack::OnUpdate(float dt) {
   }
 }
 void LayerStack::OnRender(Renderer2D& renderer) {
-  for (auto layer : m_Layers | std::views::reverse) {
+  for (auto layer : m_Layers) {
     layer->OnRender(renderer);
   }
 }

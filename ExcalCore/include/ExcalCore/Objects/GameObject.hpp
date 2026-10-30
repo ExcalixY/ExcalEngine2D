@@ -9,14 +9,10 @@ namespace ExcalCore {
 
 class GameObject final {
 public:
-  virtual ~GameObject() = default;
+  GameObject(const std::string& name, Entity entity)
+      : m_Name(name), m_QueueDestroy(false), m_EntityHandle(entity) { }
 
-  virtual void OnStart() { }
-
-  virtual void OnUpdate(float dt) { }
-
-  virtual void OnEnabled() { }
-  virtual void OnDisabled() { }
+  ~GameObject() = default;
 
   const std::string& GetName() const;
 
@@ -34,6 +30,7 @@ protected:
 
   std::string m_Name;
   Entity m_EntityHandle;
+  bool m_QueueDestroy;
 };
 
 template <ComponentType T, typename... TArgs>

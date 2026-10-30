@@ -2,3 +2,4 @@ build/*
 out/*
 log.txt
 compile_commands.json
+test.log

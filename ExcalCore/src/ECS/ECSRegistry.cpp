@@ -2,11 +2,14 @@
 
 namespace ExcalCore {
 
+ECSRegistry::ECSRegistry() : m_NextID(0) { }
+ECSRegistry::~ECSRegistry() { }
+
 Entity ECSRegistry::NewEntity() {
   Entity entity;
 
   if (!m_DeadIDs.empty()) {
-    entity = {.id = m_DeadIDs.back(), .gen = ++m_IdGens[m_DeadIDs.back()]};
+    entity = {.id = m_DeadIDs.back(), .gen = m_IdGens[m_DeadIDs.back()]};
 
     m_DeadIDs.pop_back();
     m_IdGens[entity.id] = entity.gen;
@@ -20,7 +23,20 @@ Entity ECSRegistry::NewEntity() {
 }
 
 void ECSRegistry::DeleteEntity(Entity entity) {
+  if (!IsAlive(entity)) {
+    return;
+  }
+
   m_DeadIDs.push_back(entity.id);
+  ++m_IdGens[entity.id];
+
+  for (auto& [id, set] : m_DataSets) {
+    set.get()->Remove(entity);
+  }
+}
+
+bool ECSRegistry::IsAlive(const Entity entity) const {
+  return entity.id < m_IdGens.size() && entity.gen == m_IdGens[entity.id];
 }
 
 }

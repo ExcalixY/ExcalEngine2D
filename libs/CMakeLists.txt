@@ -37,3 +37,8 @@ add_subdirectory(json)
 
 # GLM
 add_subdirectory(glm)
+
+# Catch2 - For Testing
+if(EXCALCORE_UNIT_TESTS)
+  add_subdirectory(Catch2)
+endif()

@@ -70,6 +70,15 @@ void Renderer2D::EndFrame() {
   std::ranges::stable_sort(m_CommandBuffer, {}, &DrawCommand::layer);
 
   for (auto& command : m_CommandBuffer) {
+    if (!command.texture->GetSurface()) {
+      Debug::LogError(
+        Debug::CATEGORY_RENDER,
+        "Attempted to Render a TextureAsset without a Surface attached."
+      );
+
+      continue;
+    }
+
     SDL_Texture* texture = GetTextureFromSurface(command.texture->GetSurface());
 
     if (!texture) {
@@ -79,7 +88,7 @@ void Renderer2D::EndFrame() {
         SDL_GetError()
       );
 
-      return;
+      continue;
     }
 
     SDL_SetTextureColorModFloat(

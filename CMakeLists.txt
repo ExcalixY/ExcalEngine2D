@@ -25,6 +25,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUT_DIR}/archive/)
 
 include(cmake/ExcalAssets.cmake)
 
+option(EXCALCORE_UNIT_TESTS "Build ExcalCore unit tests" ON)
+
 # Bundle the GCC runtime and winpthread so the exe runs without extra DLLs
 if(MINGW)
   add_link_options(-static -static-libgcc -static-libstdc++)
@@ -35,3 +37,8 @@ add_subdirectory(libs)
 
 add_subdirectory(ExcalCore)
 add_subdirectory(ExcalSandbox)
+
+if(EXCALCORE_UNIT_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()

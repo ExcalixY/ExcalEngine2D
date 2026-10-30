@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <format>
 #include <limits>
 
 namespace ExcalCore {
@@ -16,3 +17,14 @@ static constexpr Entity EMPTY_ENTITY = {
 };
 
 }
+
+template <>
+struct std::formatter<ExcalCore::Entity> {
+  constexpr auto parse(std::format_parse_context& ctx) {
+    return ctx.begin();
+  }
+
+  auto format(const ExcalCore::Entity& e, std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "[id: {}, gen: {}]", e.id, e.gen);
+  }
+};

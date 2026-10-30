@@ -1,0 +1,4 @@
+Checks: >
+  performance-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters
