@@ -1,12 +1,14 @@
 #include "ExcalCore/ECS/ECSRegistry.hpp"
 
+#include "ExcalCore/ECS/Entity.hpp"
+
 namespace ExcalCore {
 
-ECSRegistry::ECSRegistry() : m_NextID(0) { }
-ECSRegistry::~ECSRegistry() { }
+ECSRegistry::ECSRegistry() = default;
+ECSRegistry::~ECSRegistry() = default;
 
 Entity ECSRegistry::NewEntity() {
-  Entity entity;
+  Entity entity = {};
 
   if (!m_DeadIDs.empty()) {
     entity = {.id = m_DeadIDs.back(), .gen = m_IdGens[m_DeadIDs.back()]};

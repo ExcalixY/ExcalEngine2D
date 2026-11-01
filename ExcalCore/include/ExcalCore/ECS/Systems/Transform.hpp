@@ -1,10 +1,6 @@
 #pragma once
 
-#include <cmath>
-
-#include "ExcalCore/ECS/Components/Transform.hpp"
 #include "ExcalCore/ECS/ECSRegistry.hpp"
-#include "ExcalCore/ECS/Entity.hpp"
 
 namespace ExcalCore::ECSSystems {
 

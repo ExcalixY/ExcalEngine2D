@@ -1,8 +1,9 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_log.h>
 
 #include <concepts>
+#include <cstdint>
 #include <format>
 #include <source_location>
 #include <stdexcept>
@@ -21,7 +22,7 @@
 
 namespace ExcalCore::Debug {
 
-enum LogCategory {
+enum LogCategory : uint8_t {
   CATEGORY_ENGINE = SDL_LOG_CATEGORY_CUSTOM,
   CATEGORY_RENDER,
   CATEGORY_AUDIO,
@@ -34,10 +35,12 @@ enum LogCategory {
 inline constexpr SDL_LogPriority COMPILED_MIN_PRIORITY =
   static_cast<SDL_LogPriority>(EXCAL_LOG_MIN_PRIORITY);
 
+[[nodiscard]]
 constexpr bool IsCompiledIn(SDL_LogPriority priority) {
   return priority >= COMPILED_MIN_PRIORITY;
 }
 
+[[nodiscard]]
 constexpr std::string_view LogPriorityToString(SDL_LogPriority priority) {
   switch (priority) {
     case SDL_LOG_PRIORITY_TRACE:
@@ -59,6 +62,7 @@ constexpr std::string_view LogPriorityToString(SDL_LogPriority priority) {
   }
 }
 
+[[nodiscard]]
 constexpr std::string_view LogCategoryToString(int category) {
   switch (category) {
     case SDL_LOG_CATEGORY_APPLICATION:
@@ -151,6 +155,7 @@ void ShutdownLogging();
 
 void SetLogPriority(int category, SDL_LogPriority priority);
 void SetLogPriorities(SDL_LogPriority priority);
+[[nodiscard]]
 bool IsLogEnabled(int category, SDL_LogPriority priority);
 
 void WriteLog(

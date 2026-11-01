@@ -1,17 +1,51 @@
 #include "ExcalCore/Systems/InputSystem.hpp"
 
-#include <utility>
+#include <SDL3/SDL_scancode.h>
 
+#include <cstddef>
+#include <functional>
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <variant>
+
+#include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Events/EventTypes/KeyEvents.hpp"
+#include "ExcalCore/Events/EventTypes/MouseEvents.hpp"
+#include "ExcalCore/Events/EventTypes/WindowFocusEvent.hpp"
+#include "ExcalCore/Input/InputBindings.hpp"
+#include "ExcalCore/Input/KeyCode.hpp"
+#include "ExcalCore/Input/MouseButton.hpp"
 #include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
+InputSystem* InputSystem::instance = nullptr;
+
 InputSystem::InputSystem(ApplicationSpec& spec) {
+  if (instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE,
+      "Attempted to initialize a second instance of InputSystem."
+    );
+  }
+
+  instance = this;
   Debug::Log("Initializing Input System...");
 }
 
 InputSystem::~InputSystem() {
+  instance = nullptr;
   Debug::Log("Destroying Input System...");
+}
+
+const InputSystem* InputSystem::GetInstance() {
+  if (!instance) {
+    Debug::ThrowError(Debug::CATEGORY_INPUT, "InputSystem not initialized...");
+  }
+  return instance;
 }
 
 void InputSystem::BeginFrame() {
@@ -25,7 +59,7 @@ void InputSystem::BeginFrame() {
   m_MouseScroll = {0, 0};
 }
 
-void InputSystem::OnEvent(const KeyPressedEvent& e) {
+void InputSystem::OnEvent(KeyPressedEvent& e) {
   if (e.scancode >= SDL_SCANCODE_COUNT) {
     return;
   }
@@ -36,7 +70,7 @@ void InputSystem::OnEvent(const KeyPressedEvent& e) {
   m_KeysDown.set(e.scancode);
 }
 
-void InputSystem::OnEvent(const KeyReleasedEvent& e) {
+void InputSystem::OnEvent(KeyReleasedEvent& e) {
   if (e.scancode >= SDL_SCANCODE_COUNT) {
     return;
   }
@@ -45,12 +79,12 @@ void InputSystem::OnEvent(const KeyReleasedEvent& e) {
   m_KeysReleased.set(e.scancode);
 }
 
-void InputSystem::OnEvent(const MouseMovedEvent& e) {
+void InputSystem::OnEvent(MouseMovedEvent& e) {
   m_MousePosition = e.position;
   m_MouseDelta += e.delta;
 }
 
-void InputSystem::OnEvent(const MouseButtonPressedEvent& e) {
+void InputSystem::OnEvent(MouseButtonPressedEvent& e) {
   m_MousePosition = e.position;
 
   if (e.button >= MOUSE_BUTTON_COUNT) {
@@ -61,7 +95,7 @@ void InputSystem::OnEvent(const MouseButtonPressedEvent& e) {
   m_MousePressed.set(e.button);
 }
 
-void InputSystem::OnEvent(const MouseButtonReleasedEvent& e) {
+void InputSystem::OnEvent(MouseButtonReleasedEvent& e) {
   m_MousePosition = e.position;
 
   if (e.button >= MOUSE_BUTTON_COUNT) {
@@ -72,11 +106,11 @@ void InputSystem::OnEvent(const MouseButtonReleasedEvent& e) {
   m_MouseReleased.set(e.button);
 }
 
-void InputSystem::OnEvent(const MouseScrolledEvent& e) {
+void InputSystem::OnEvent(MouseScrolledEvent& e) {
   m_MouseScroll += e.delta;
 }
 
-void InputSystem::OnEvent(const WindowFocusEvent& e) {
+void InputSystem::OnEvent(WindowFocusEvent& e) {
   if (e.focused) {
     return;
   }
@@ -299,6 +333,66 @@ float InputSystem::EvaluateAxis(
   }
 
   return value;
+}
+
+namespace Input {
+
+bool HasBinding(std::string_view name) {
+  return InputSystem::GetInstance()->HasBinding(name);
+}
+
+ButtonState GetButton(std::string_view name) {
+  return InputSystem::GetInstance()->GetButton(name);
+}
+
+float GetAxis(std::string_view name) {
+  return InputSystem::GetInstance()->GetAxis(name);
+}
+
+glm::vec2 GetAxis2D(std::string_view name) {
+  return InputSystem::GetInstance()->GetAxis2D(name);
+}
+
+glm::vec3 GetAxis3D(std::string_view name) {
+  return InputSystem::GetInstance()->GetAxis3D(name);
+}
+
+bool IsKeyDown(KeyCode key) {
+  return InputSystem::GetInstance()->IsKeyDown(key);
+}
+
+bool IsKeyPressed(KeyCode key) {
+  return InputSystem::GetInstance()->IsKeyPressed(key);
+}
+
+bool IsKeyReleased(KeyCode key) {
+  return InputSystem::GetInstance()->IsKeyReleased(key);
+}
+
+bool IsMouseButtonDown(MouseButton button) {
+  return InputSystem::GetInstance()->IsMouseButtonDown(button);
+}
+
+bool IsMouseButtonPressed(MouseButton button) {
+  return InputSystem::GetInstance()->IsMouseButtonPressed(button);
+}
+
+bool IsMouseButtonReleased(MouseButton button) {
+  return InputSystem::GetInstance()->IsMouseButtonReleased(button);
+}
+
+const glm::vec2& GetMousePosition() {
+  return InputSystem::GetInstance()->GetMousePosition();
+}
+
+const glm::vec2& GetMouseDelta() {
+  return InputSystem::GetInstance()->GetMouseDelta();
+}
+
+const glm::vec2& GetMouseScroll() {
+  return InputSystem::GetInstance()->GetMouseScroll();
+}
+
 }
 
 }

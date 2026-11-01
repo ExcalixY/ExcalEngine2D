@@ -10,6 +10,7 @@ struct UUID {
 
 class UUIDManager final {
 public:
+  [[nodiscard]]
   static UUID GetNewUUID();
 };
 

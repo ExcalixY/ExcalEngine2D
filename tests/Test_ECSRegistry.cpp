@@ -1,9 +1,13 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
+#include "ExcalCore/ECS/Components/Component.hpp"
 #include "ExcalCore/ECS/ECSRegistry.hpp"
+#include "ExcalCore/ECS/Entity.hpp"
 
 using namespace ExcalCore;
 
@@ -76,7 +80,7 @@ TEST_CASE("ECSRegistry::DeleteEntity recycles ids", "[ecs]") {
 
   SECTION("a deleted id comes back with a higher generation") {
     Entity a = ecs.NewEntity();
-    ecs.NewEntity();
+    (void)ecs.NewEntity();
     ecs.DeleteEntity(a);
 
     Entity reused = ecs.NewEntity();

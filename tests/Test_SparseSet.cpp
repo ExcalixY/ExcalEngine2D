@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <random>
 #include <stdexcept>
@@ -8,7 +10,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ExcalCore/ECS/Entity.hpp"
 #include "ExcalCore/Utils/SparseSet.hpp"
+#include <catch2/catch_message.hpp>
 
 using namespace ExcalCore;
 

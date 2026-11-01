@@ -1,10 +1,7 @@
 #pragma once
 
-#include <SDL3/SDL.h>
-
 #include <concepts>
 #include <initializer_list>
-#include <utility>
 #include <variant>
 #include <vector>
 

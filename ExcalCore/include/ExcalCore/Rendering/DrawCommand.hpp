@@ -1,8 +1,9 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_surface.h>
 
-#include <memory>
 #include <optional>
 
 #include "ExcalCore/Assets/TextureAsset.hpp"
@@ -10,7 +11,7 @@
 namespace ExcalCore {
 
 struct DrawCommand {
-  std::shared_ptr<TextureAsset> texture = nullptr;
+  TextureAsset* texture = nullptr;
   std::optional<SDL_FRect> source;
   SDL_FRect destination = {0, 0, 0, 0};
   double rotation = 0.0;

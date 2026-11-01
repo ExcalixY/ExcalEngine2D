@@ -1,19 +1,30 @@
 #include "ExcalCore/ECS/Systems/SpriteRenderer.hpp"
 
-#include <cmath>
-#include <glm/geometric.hpp>
-#include <glm/mat3x3.hpp>
-#include <glm/trigonometric.hpp>
-#include <glm/vec2.hpp>
+#include <SDL3/SDL_rect.h>
 
+#include <cmath>
+#include <glm/ext/matrix_float3x3.hpp>
+#include <glm/ext/vector_float2.hpp>
+#include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
+
+#include "ExcalCore/ECS/Components/ObjectEnabledComponent.hpp"
 #include "ExcalCore/ECS/Components/SpriteRenderer.hpp"
 #include "ExcalCore/ECS/Components/Transform.hpp"
+#include "ExcalCore/ECS/ECSRegistry.hpp"
+#include "ExcalCore/ECS/Entity.hpp"
+#include "ExcalCore/Rendering/Renderer2D.hpp"
 
 namespace ExcalCore::ECSSystems {
 
 void IssueDrawCommands(ECSRegistry& ecs, Renderer2D& renderer) {
-  ecs.Each<WorldTransform, SpriteRenderer>(
-    [&renderer](Entity, const WorldTransform* t, SpriteRenderer* s) {
+  ecs.Each<WorldTransform, SpriteRenderer, ObjectEnabledComponent>(
+    [&renderer](
+      Entity,
+      const WorldTransform* t,
+      SpriteRenderer* s,
+      ObjectEnabledComponent*
+    ) {
       if (!s->texture) {
         return;
       }
@@ -32,7 +43,7 @@ void IssueDrawCommands(ECSRegistry& ecs, Renderer2D& renderer) {
       glm::vec2 pivot_px = s->pivot * size;
 
       renderer.SubmitDrawCommand({
-        .texture = s->texture,
+        .texture = s->texture.get(),
         .source = s->source,
         .destination =
           {position.x - pivot_px.x, position.y - pivot_px.y, size.x, size.y},

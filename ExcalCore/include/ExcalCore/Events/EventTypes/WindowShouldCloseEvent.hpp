@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "Event.hpp"
+#include "ExcalCore/Events/Event.hpp"
 
 namespace ExcalCore {
 

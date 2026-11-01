@@ -1,8 +1,16 @@
 #include "ExcalCore/Utils/Logging.hpp"
 
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_timer.h>
+
 #include <cstdio>
+#include <format>
 #include <fstream>
+#include <ios>
 #include <mutex>
+#include <source_location>
+#include <string>
+#include <string_view>
 
 namespace ExcalCore::Debug {
 
@@ -36,7 +44,7 @@ void LogCallback(
   std::fprintf(stream, "%s\n", line.c_str());
 
   if (s_LogFile.is_open()) {
-    s_LogFile << line << std::endl;
+    s_LogFile << line << '\n';
   }
 }
 

@@ -1,12 +1,12 @@
 #pragma once
 
 #include <format>
-#include <glm/mat3x3.hpp>
-#include <glm/vec2.hpp>
+#include <glm/ext/matrix_float3x3.hpp>
+#include <glm/ext/vector_float2.hpp>
 #include <string_view>
 
 #include "Component.hpp"
-#include "ExcalCore/Utils/TypeFormats.hpp"
+#include "ExcalCore/Utils/TypeFormats.hpp"  // IWYU pragma: keep
 
 namespace ExcalCore {
 
@@ -23,7 +23,7 @@ struct Transform : Component {
 struct WorldTransform : Component {
   static constexpr std::string_view Name = "WorldTransform";
 
-  glm::mat3 worldMatrix;
+  glm::mat3 worldMatrix = {1.0f};
 };
 
 }

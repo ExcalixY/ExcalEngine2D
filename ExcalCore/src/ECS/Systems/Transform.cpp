@@ -1,5 +1,12 @@
 #include "ExcalCore/ECS/Systems/Transform.hpp"
 
+#include <cmath>
+#include <glm/ext/vector_float3.hpp>
+
+#include "ExcalCore/ECS/Components/Transform.hpp"
+#include "ExcalCore/ECS/ECSRegistry.hpp"
+#include "ExcalCore/ECS/Entity.hpp"
+
 namespace ExcalCore::ECSSystems {
 
 void UpdateLocalMatrices(ECSRegistry& ecs) {

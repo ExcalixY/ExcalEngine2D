@@ -1,4 +1,8 @@
 #include "ExcalCore/Input/InputBindings.hpp"
+#include "ExcalCore/Input/KeyCode.hpp"
+#include "ExcalCore/Input/MouseButton.hpp"
+#include <initializer_list>
+#include <utility>
 
 namespace ExcalCore {
 

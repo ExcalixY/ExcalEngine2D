@@ -1,10 +1,11 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_scancode.h>
 
 #include <string_view>
 
-#include "Event.hpp"
+#include "ExcalCore/Events/Event.hpp"
 
 namespace ExcalCore {
 

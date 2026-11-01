@@ -1,7 +1,7 @@
 #pragma once
 
 #include <format>
-#include <glm/fwd.hpp>
+#include <glm/fwd.hpp>  // IWYU pragma: keep
 
 template <glm::length_t L, typename T, glm::qualifier Q>
 struct std::formatter<glm::vec<L, T, Q>> : std::formatter<T> {

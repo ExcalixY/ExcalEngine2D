@@ -1,12 +1,19 @@
 #include "ExcalCore/Assets/AudioClip.hpp"
 
+#include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_stdinc.h>
+
+#include <memory>
+#include <string>
+
 #include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
 std::shared_ptr<AudioClip> AudioClip::Load(const std::string& path) {
-  SDL_AudioSpec spec;
-  Uint8* data;
+  SDL_AudioSpec spec = {};
+  Uint8* data = nullptr;
   Uint32 size = 0;
 
   if (!SDL_LoadWAV(path.c_str(), &spec, &data, &size)) {

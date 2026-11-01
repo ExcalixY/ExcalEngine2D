@@ -16,6 +16,10 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
+# No C++20 modules are used; scanning only adds GCC-only flags that break clangd/clang-tidy
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 set(OUT_DIR ${CMAKE_SOURCE_DIR}/out/${CMAKE_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
 
@@ -37,6 +41,8 @@ add_subdirectory(libs)
 
 add_subdirectory(ExcalCore)
 add_subdirectory(ExcalSandbox)
+add_subdirectory(ExcalStressBehavior)
+add_subdirectory(ExcalStressComponent)
 
 if(EXCALCORE_UNIT_TESTS)
   enable_testing()

@@ -1,6 +1,12 @@
 #include "ExcalCore/Assets/TextureAsset.hpp"
 
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
+
+#include <glm/ext/vector_float2.hpp>
 #include <memory>
+#include <string>
 
 #include "ExcalCore/Utils/Logging.hpp"
 
@@ -10,6 +16,7 @@ TextureAsset::TextureAsset(SDL_Surface* surface) : m_Surface(surface) { }
 
 TextureAsset::~TextureAsset() {
   SDL_DestroySurface(m_Surface);
+  SDL_DestroyTexture(m_Texture);
 }
 
 std::shared_ptr<TextureAsset> TextureAsset::Load(const std::string& path) {
@@ -35,6 +42,14 @@ glm::vec2 TextureAsset::GetSize() const {
 
 SDL_Surface* TextureAsset::GetSurface() const {
   return m_Surface;
+}
+
+SDL_Texture* TextureAsset::GetTexture() const {
+  return m_Texture;
+}
+
+void TextureAsset::SetTexture(SDL_Texture* texture) {
+  m_Texture = texture;
 }
 
 }

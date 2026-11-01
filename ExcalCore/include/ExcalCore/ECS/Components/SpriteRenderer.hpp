@@ -1,7 +1,11 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_surface.h>
 
+#include <glm/ext/vector_float2.hpp>
+#include <memory>
 #include <optional>
 
 #include "ExcalCore/Assets/TextureAsset.hpp"

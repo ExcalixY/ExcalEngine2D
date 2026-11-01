@@ -1,12 +1,13 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_scancode.h>
 
 #include <bitset>
 #include <concepts>
+#include <cstddef>
 #include <functional>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -15,10 +16,12 @@
 #include <utility>
 
 #include "ExcalCore/ApplicationSpec.hpp"
-#include "ExcalCore/Events/KeyEvents.hpp"
-#include "ExcalCore/Events/MouseEvents.hpp"
-#include "ExcalCore/Events/WindowFocusEvent.hpp"
+#include "ExcalCore/Events/EventTypes/KeyEvents.hpp"
+#include "ExcalCore/Events/EventTypes/MouseEvents.hpp"
+#include "ExcalCore/Events/EventTypes/WindowFocusEvent.hpp"
 #include "ExcalCore/Input/InputBindings.hpp"
+#include "ExcalCore/Input/KeyCode.hpp"
+#include "ExcalCore/Input/MouseButton.hpp"
 
 namespace ExcalCore {
 
@@ -27,15 +30,21 @@ public:
   explicit InputSystem(ApplicationSpec& spec);
   ~InputSystem();
 
+  InputSystem(const InputSystem&) = delete;
+  InputSystem& operator=(const InputSystem&) = delete;
+
+  [[nodiscard]]
+  static const InputSystem* GetInstance();
+
   void BeginFrame();
 
-  void OnEvent(const KeyPressedEvent& e);
-  void OnEvent(const KeyReleasedEvent& e);
-  void OnEvent(const MouseMovedEvent& e);
-  void OnEvent(const MouseButtonPressedEvent& e);
-  void OnEvent(const MouseButtonReleasedEvent& e);
-  void OnEvent(const MouseScrolledEvent& e);
-  void OnEvent(const WindowFocusEvent& e);
+  void OnEvent(KeyPressedEvent& e);
+  void OnEvent(KeyReleasedEvent& e);
+  void OnEvent(MouseMovedEvent& e);
+  void OnEvent(MouseButtonPressedEvent& e);
+  void OnEvent(MouseButtonReleasedEvent& e);
+  void OnEvent(MouseScrolledEvent& e);
+  void OnEvent(WindowFocusEvent& e);
 
   void BindInput(std::string name, InputBinding binding);
 
@@ -47,26 +56,42 @@ public:
   void BindInput(std::string name, std::type_identity_t<TBinding> binding);
 
   void UnbindInput(std::string_view name);
+  [[nodiscard]]
   bool HasBinding(std::string_view name) const;
 
+  [[nodiscard]]
   ButtonState GetButton(std::string_view name) const;
+  [[nodiscard]]
   float GetAxis(std::string_view name) const;
+  [[nodiscard]]
   glm::vec2 GetAxis2D(std::string_view name) const;
+  [[nodiscard]]
   glm::vec3 GetAxis3D(std::string_view name) const;
 
+  [[nodiscard]]
   bool IsKeyDown(KeyCode key) const;
+  [[nodiscard]]
   bool IsKeyPressed(KeyCode key) const;
+  [[nodiscard]]
   bool IsKeyReleased(KeyCode key) const;
 
+  [[nodiscard]]
   bool IsMouseButtonDown(MouseButton button) const;
+  [[nodiscard]]
   bool IsMouseButtonPressed(MouseButton button) const;
+  [[nodiscard]]
   bool IsMouseButtonReleased(MouseButton button) const;
 
+  [[nodiscard]]
   const glm::vec2& GetMousePosition() const;
+  [[nodiscard]]
   const glm::vec2& GetMouseDelta() const;
+  [[nodiscard]]
   const glm::vec2& GetMouseScroll() const;
 
 private:
+  static InputSystem* instance;
+
   struct StringHash {
     using is_transparent = void;
 
@@ -74,10 +99,14 @@ private:
   };
 
   template <typename TBinding>
+  [[nodiscard]]
   const TBinding* FindBinding(std::string_view name) const;
 
+  [[nodiscard]]
   ButtonState EvaluateSource(const ButtonSource& source) const;
+  [[nodiscard]]
   ButtonState EvaluateSources(const ButtonSources& sources) const;
+  [[nodiscard]]
   float EvaluateAxis(
     const ButtonSources& negative, const ButtonSources& positive
   ) const;
@@ -116,6 +145,39 @@ void InputSystem::BindInput(
   std::string name, std::type_identity_t<TBinding> binding
 ) {
   BindInput(std::move(name), InputBinding(std::move(binding)));
+}
+
+namespace Input {
+
+[[nodiscard]]
+bool HasBinding(std::string_view name);
+[[nodiscard]]
+ButtonState GetButton(std::string_view name);
+[[nodiscard]]
+float GetAxis(std::string_view name);
+[[nodiscard]]
+glm::vec2 GetAxis2D(std::string_view name);
+[[nodiscard]]
+glm::vec3 GetAxis3D(std::string_view name);
+[[nodiscard]]
+bool IsKeyDown(KeyCode key);
+[[nodiscard]]
+bool IsKeyPressed(KeyCode key);
+[[nodiscard]]
+bool IsKeyReleased(KeyCode key);
+[[nodiscard]]
+bool IsMouseButtonDown(MouseButton button);
+[[nodiscard]]
+bool IsMouseButtonPressed(MouseButton button);
+[[nodiscard]]
+bool IsMouseButtonReleased(MouseButton button);
+[[nodiscard]]
+const glm::vec2& GetMousePosition();
+[[nodiscard]]
+const glm::vec2& GetMouseDelta();
+[[nodiscard]]
+const glm::vec2& GetMouseScroll();
+
 }
 
 }

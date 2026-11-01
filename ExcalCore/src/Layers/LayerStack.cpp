@@ -1,82 +1,127 @@
 #include "ExcalCore/Layers/LayerStack.hpp"
 
-#include <ranges>
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Layers/Layer.hpp"
+#include "ExcalCore/Rendering/Renderer2D.hpp"
+#include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
-LayerStack::LayerStack(ApplicationSpec& spec)
-    : m_Layers(0), m_InsertIndex(0) { }
+
+LayerStack* LayerStack::instance = nullptr;
+
+LayerStack::LayerStack(ApplicationSpec& spec) {
+  if (instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE,
+      "Attempted to initialize a second instance of LayerStack."
+    );
+  }
+
+  instance = this;
+}
 
 LayerStack::~LayerStack() {
-  for (Layer* l : m_Layers) {
-    l->OnDetach();
-    delete l;
+  for (auto it = m_Layers.rbegin(); it != m_Layers.rend(); ++it) {
+    (*it)->OnDetach();
   }
+
+  instance = nullptr;
 }
 
-void LayerStack::PushLayer(Layer* layer) {
-  m_Layers.emplace(m_Layers.begin() + m_InsertIndex++, layer);
-  layer->OnAttach();
+LayerStack* LayerStack::GetInstance() {
+  if (!instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE, "LayerStack has not been initialized."
+    );
+  }
+
+  return instance;
 }
 
-void LayerStack::PushOverlay(Layer* layer) {
-  m_Layers.emplace_back(layer);
-  layer->OnAttach();
+void LayerStack::PushLayer(std::unique_ptr<Layer> layer) {
+  Layer* raw = layer.get();
+
+  m_Layers.emplace(
+    m_Layers.begin() + static_cast<std::ptrdiff_t>(m_InsertIndex++),
+    std::move(layer)
+  );
+  raw->OnAttach();
+}
+
+void LayerStack::PushOverlay(std::unique_ptr<Layer> layer) {
+  Layer* raw = layer.get();
+
+  m_Layers.emplace_back(std::move(layer));
+  raw->OnAttach();
 }
 
 void LayerStack::PopLayer(Layer* layer) {
-  auto it = m_Layers.begin();
+  auto layers_end =
+    m_Layers.begin() + static_cast<std::ptrdiff_t>(m_InsertIndex);
 
-  for (size_t i = 0; i < m_InsertIndex; ++i) {
-    if (*it == layer) {
-      layer->OnDetach();
+  auto it = std::find_if(m_Layers.begin(), layers_end, [layer](auto& l) {
+    return l.get() == layer;
+  });
 
-      m_Layers.erase(it);
-      --m_InsertIndex;
-
-      return;
-    }
-
-    ++it;
+  if (it == layers_end) {
+    return;
   }
+
+  layer->OnDetach();
+  m_Layers.erase(it);
+  --m_InsertIndex;
 }
 
 void LayerStack::PopOverlay(Layer* layer) {
-  auto it = m_Layers.begin();
+  auto overlays_begin =
+    m_Layers.begin() + static_cast<std::ptrdiff_t>(m_InsertIndex);
 
-  for (size_t i = m_InsertIndex; i < m_Layers.size(); ++i) {
-    if (*it == layer) {
-      layer->OnDetach();
+  auto it = std::find_if(overlays_begin, m_Layers.end(), [layer](auto& l) {
+    return l.get() == layer;
+  });
 
-      m_Layers.erase(it);
-      return;
-    }
+  if (it == m_Layers.end()) {
+    return;
+  }
 
-    ++it;
+  layer->OnDetach();
+  m_Layers.erase(it);
+}
+
+void LayerStack::OnStart() {
+  for (auto& layer : m_Layers) {
+    layer->OnStart();
   }
 }
 
 void LayerStack::OnUpdate(float dt) {
-  for (auto layer : m_Layers) {
+  for (auto& layer : m_Layers) {
     layer->OnUpdate(dt);
   }
 }
 void LayerStack::OnRender(Renderer2D& renderer) {
-  for (auto layer : m_Layers) {
+  for (auto& layer : m_Layers) {
     layer->OnRender(renderer);
   }
 }
 
-std::vector<Layer*>::iterator LayerStack::begin() {
+std::vector<std::unique_ptr<Layer>>::iterator LayerStack::begin() {
   return m_Layers.begin();
 }
-std::vector<Layer*>::iterator LayerStack::end() {
+std::vector<std::unique_ptr<Layer>>::iterator LayerStack::end() {
   return m_Layers.end();
 }
 
-std::vector<Layer*>::reverse_iterator LayerStack::rbegin() {
+std::vector<std::unique_ptr<Layer>>::reverse_iterator LayerStack::rbegin() {
   return m_Layers.rbegin();
 }
-std::vector<Layer*>::reverse_iterator LayerStack::rend() {
+std::vector<std::unique_ptr<Layer>>::reverse_iterator LayerStack::rend() {
   return m_Layers.rend();
 }
 

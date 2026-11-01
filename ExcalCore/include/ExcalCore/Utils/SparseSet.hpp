@@ -20,8 +20,10 @@ public:
 
   virtual ~ISparseSet() = default;
 
+  [[nodiscard]]
   virtual bool Contains(Entity entity) const = 0;
   virtual bool Remove(Entity entity) = 0;
+  [[nodiscard]]
   virtual size_t Size() const = 0;
   virtual void Clear() = 0;
 };
@@ -84,22 +86,27 @@ public:
     m_Data.clear();
   }
 
+  [[nodiscard]]
   size_t Size() const override {
     return m_Data.size();
   }
 
+  [[nodiscard]]
   bool Contains(Entity entity) const override {
     return (GetDenseIndex(entity) != SPARSESET_INVALID_INDEX);
   }
 
+  [[nodiscard]]
   std::span<const Entity> GetEntities() {
     return m_Dense;
   }
 
+  [[nodiscard]]
   std::span<T> GetData() {
     return m_Data;
   }
 
+  [[nodiscard]]
   T& Get(Entity entity) {
     size_t i = GetDenseIndex(entity);
 
@@ -115,6 +122,7 @@ public:
     }
   }
 
+  [[nodiscard]]
   T* TryGet(Entity entity) {
     size_t i = GetDenseIndex(entity);
 
@@ -126,6 +134,7 @@ public:
     }
   }
 
+  [[nodiscard]]
   const T& Get(Entity entity) const {
     size_t i = GetDenseIndex(entity);
 
@@ -141,6 +150,7 @@ public:
     }
   }
 
+  [[nodiscard]]
   const T* TryGet(Entity entity) const {
     size_t i = GetDenseIndex(entity);
 
@@ -152,6 +162,7 @@ public:
   }
 
 private:
+  [[nodiscard]]
   size_t GetDenseIndex(Entity entity) const {
     if (m_Sparse.size() <= entity.id) {
       return SPARSESET_INVALID_INDEX;

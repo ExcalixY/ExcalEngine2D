@@ -11,15 +11,38 @@
 
 namespace ExcalCore {
 
+class IAssetCache {
+public:
+  IAssetCache() = default;
+  virtual ~IAssetCache() = default;
+  virtual void Sweep() = 0;
+};
+
 template <typename T>
   requires LoadableAsset<T>
-class AssetCache {
+class AssetCache : public IAssetCache {
 public:
-  explicit AssetCache();
-  ~AssetCache();
+  explicit AssetCache() = default;
 
-  std::shared_ptr<T> LoadAsset(const std::string& path);
-  void Sweep();
+  AssetCache(const AssetCache&) = delete;
+  AssetCache(AssetCache&&) = delete;
+  AssetCache& operator=(const AssetCache&) = delete;
+  AssetCache& operator=(AssetCache&&) = delete;
+
+  ~AssetCache() {
+    m_Data.clear();
+    m_PinnedData.clear();
+  }
+
+  template <typename... TArgs>
+  [[nodiscard]]
+  std::shared_ptr<T> LoadAsset(const std::string& path, TArgs&&... args);
+
+  void Sweep() override {
+    std::erase_if(m_Data, [](const auto& entry) {
+      return entry.second.expired();
+    });
+  }
 
 private:
   std::unordered_map<std::string, std::weak_ptr<T>> m_Data;
@@ -28,18 +51,10 @@ private:
 
 template <typename T>
   requires LoadableAsset<T>
-AssetCache<T>::AssetCache() : m_Data(), m_PinnedData() { }
-
-template <typename T>
-  requires LoadableAsset<T>
-AssetCache<T>::~AssetCache() {
-  m_Data.clear();
-  m_PinnedData.clear();
-}
-
-template <typename T>
-  requires LoadableAsset<T>
-std::shared_ptr<T> AssetCache<T>::LoadAsset(const std::string& path) {
+template <typename... TArgs>
+std::shared_ptr<T> AssetCache<T>::LoadAsset(
+  const std::string& path, TArgs&&... args
+) {
   std::error_code ec;
   std::filesystem::path real_path = std::filesystem::canonical(path, ec);
 
@@ -62,7 +77,7 @@ std::shared_ptr<T> AssetCache<T>::LoadAsset(const std::string& path) {
     }
   }
 
-  std::shared_ptr<T> asset = T::Load(path);
+  std::shared_ptr<T> asset = T::Load(path, std::forward<TArgs>(args)...);
   if (!asset) {
     return nullptr;
   }
@@ -71,14 +86,6 @@ std::shared_ptr<T> AssetCache<T>::LoadAsset(const std::string& path) {
   m_Data.insert_or_assign(path_str, ptr_weak);
 
   return asset;
-}
-
-template <typename T>
-  requires LoadableAsset<T>
-void AssetCache<T>::Sweep() {
-  std::erase_if(m_Data, [](const auto& entry) {
-    return entry.second.expired();
-  });
 }
 
 }

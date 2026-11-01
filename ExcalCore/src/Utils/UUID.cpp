@@ -1,5 +1,6 @@
 #include "ExcalCore/Utils/UUID.hpp"
 
+#include <cstdint>
 #include <random>
 
 namespace ExcalCore {

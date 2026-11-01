@@ -5,11 +5,26 @@
 
 #include <algorithm>
 
+#include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Events/EventTypes/WindowResizeEvent.hpp"
+#include "ExcalCore/Rendering/DrawCommand.hpp"
+#include "ExcalCore/Rendering/Window.hpp"
 #include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
+Renderer2D* Renderer2D::instance = nullptr;
+
 Renderer2D::Renderer2D(ApplicationSpec& spec, Window& window) : m_Spec(spec) {
+  if (instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE,
+      "Attempted to initialize a second instance of Renderer2D."
+    );
+  }
+
+  instance = this;
+
   Debug::Log("Initializing 2D Renderer...");
 
   m_Renderer = SDL_CreateRenderer(window.GetWindowRaw(), nullptr);
@@ -20,42 +35,50 @@ Renderer2D::Renderer2D(ApplicationSpec& spec, Window& window) : m_Spec(spec) {
       "Failed to initialize Renderer2D: {}",
       SDL_GetError()
     );
-
-    return;
   }
 
   SDL_SetRenderVSync(m_Renderer, spec.rendererSpec.vsync);
+}
+
+Renderer2D* Renderer2D::GetInstance() {
+  if (!instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE, "Renderer2D has not been initialized."
+    );
+  }
+
+  return instance;
 }
 
 SDL_Renderer* Renderer2D::GetRendererRaw() {
   return m_Renderer;
 }
 
-SDL_Texture* Renderer2D::GetTextureFromSurface(SDL_Surface* surface) {
-  auto it = m_Textures.find(surface);
-
-  if (it == m_Textures.end()) {
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
-
-    if (!texture) {
-      Debug::LogError(
-        Debug::CATEGORY_RENDER,
-        "Failed to create Texture from Surface: {}",
-        SDL_GetError()
-      );
-      return nullptr;
-    }
-
-    m_Textures[surface] =
-      std::shared_ptr<SDL_Texture>(texture, SDL_DestroyTexture);
-
-    return texture;
-  } else {
-    return it->second.get();
-  }
-
-  return nullptr;
-}
+// SDL_Texture* Renderer2D::GetTextureFromSurface(SDL_Surface* surface) {
+//   auto it = m_Textures.find(surface);
+//
+//   if (it == m_Textures.end()) {
+//     SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+//
+//     if (!texture) {
+//       Debug::LogError(
+//         Debug::CATEGORY_RENDER,
+//         "Failed to create Texture from Surface: {}",
+//         SDL_GetError()
+//       );
+//       return nullptr;
+//     }
+//
+//     m_Textures[surface] =
+//       std::shared_ptr<SDL_Texture>(texture, SDL_DestroyTexture);
+//
+//     return texture;
+//   } else {
+//     return it->second.get();
+//   }
+//
+//   return nullptr;
+// }
 
 void Renderer2D::BeginFrame() {
   SDL_RenderClear(m_Renderer);
@@ -70,16 +93,33 @@ void Renderer2D::EndFrame() {
   std::ranges::stable_sort(m_CommandBuffer, {}, &DrawCommand::layer);
 
   for (auto& command : m_CommandBuffer) {
-    if (!command.texture->GetSurface()) {
+    if (!command.texture) {
       Debug::LogError(
-        Debug::CATEGORY_RENDER,
-        "Attempted to Render a TextureAsset without a Surface attached."
+        Debug::CATEGORY_RENDER, "Missing Texture in Draw Command."
       );
 
       continue;
     }
 
-    SDL_Texture* texture = GetTextureFromSurface(command.texture->GetSurface());
+    // if (!command.texture->GetSurface()) {
+    //   Debug::LogError(
+    //     Debug::CATEGORY_RENDER,
+    //     "Attempted to Render a TextureAsset without a Surface attached."
+    //   );
+
+    //   continue;
+    // }
+
+    // SDL_Texture* texture =
+    // GetTextureFromSurface(command.texture->GetSurface());
+
+    SDL_Texture* texture = command.texture->GetTexture();
+    if (!texture) {
+      texture =
+        SDL_CreateTextureFromSurface(m_Renderer, command.texture->GetSurface());
+
+      command.texture->SetTexture(texture);
+    }
 
     if (!texture) {
       Debug::LogError(
@@ -121,10 +161,10 @@ void Renderer2D::EndFrame() {
 Renderer2D::~Renderer2D() {
   Debug::Log("Destroying Renderer2D...");
 
-  m_Textures.clear();
+  // m_Textures.clear();
   SDL_DestroyRenderer(m_Renderer);
 }
 
-void Renderer2D::OnEvent(const WindowResizeEvent& e) { }
+void Renderer2D::OnEvent(WindowResizeEvent& e) { }
 
 }

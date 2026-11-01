@@ -1,28 +1,47 @@
 #include "ExcalCore/Application.hpp"
 
-#include <SDL3/SDL.h>
+#include <utility>
 
+#include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Events/EventTypes/WindowShouldCloseEvent.hpp"
+#include "ExcalCore/Rendering/Renderer2D.hpp"
+#include "ExcalCore/Rendering/Window.hpp"
+#include "ExcalCore/Systems/AssetManager.hpp"
+#include "ExcalCore/Systems/InputSystem.hpp"
+#include "ExcalCore/Systems/TimeSystem.hpp"
 #include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
+Application* Application::instance = nullptr;
+
 Application::Application(ApplicationSpec spec)
-    : m_Spec(spec),
+    : m_Spec(std::move(spec)),
       m_Initializer(m_Spec),
       m_Window(m_Spec),
       m_Renderer(m_Spec, m_Window),
       m_Assets(m_Spec),
       m_Time(m_Spec),
       m_Input(m_Spec),
-      m_Layers(m_Spec),
-      m_Events(m_Spec) { }
+      m_Events(m_Spec),
+      m_Layers(m_Spec) {
+  if (instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE,
+      "Attempted to initialize a second instance of Application."
+    );
+  }
+
+  instance = this;
+}
 
 void Application::Run() {
   Debug::Log("Starting Runtime Loop...");
 
   m_Running = true;
-
   m_Time.Reset();
+
+  m_Layers.OnStart();
 
   while (m_Running) {
     // Update Time
@@ -30,9 +49,12 @@ void Application::Run() {
 
     // Update Events
     m_Input.BeginFrame();
-    m_Events.PollEvents([&](const auto& event) {
+
+    // Events
+    m_Events.PollEvents([&](auto&& event) {
       m_Events.DispatchEvent(event, *this, m_Window, m_Renderer, m_Input);
     });
+    m_Events.UpdateEvents();
 
     // Update Loop
     m_Layers.OnUpdate(m_Time.GetDeltaTime());
@@ -44,9 +66,21 @@ void Application::Run() {
   }
 }
 
-Application::~Application() { }
+Application::~Application() {
+  instance = nullptr;
+}
 
-void Application::OnEvent(const WindowShouldCloseEvent& e) {
+Application* Application::GetInstance() {
+  if (!instance) {
+    Debug::ThrowError(
+      Debug::CATEGORY_ENGINE, "Application has not been initialized."
+    );
+  }
+
+  return instance;
+}
+
+void Application::OnEvent(WindowShouldCloseEvent& e) {
   m_Running = false;
 }
 

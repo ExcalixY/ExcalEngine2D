@@ -1,11 +1,11 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_stdinc.h>
 
-#include <glm/vec2.hpp>
+#include <glm/ext/vector_float2.hpp>
 #include <string_view>
 
-#include "Event.hpp"
+#include "ExcalCore/Events/Event.hpp"
 
 namespace ExcalCore {
 

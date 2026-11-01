@@ -38,6 +38,22 @@ add_subdirectory(json)
 # GLM
 add_subdirectory(glm)
 
+# Dear ImGui (core + SDL3 platform and SDL_Renderer backends)
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+
+add_library(imgui STATIC
+  ${IMGUI_DIR}/imgui.cpp
+  ${IMGUI_DIR}/imgui_demo.cpp
+  ${IMGUI_DIR}/imgui_draw.cpp
+  ${IMGUI_DIR}/imgui_tables.cpp
+  ${IMGUI_DIR}/imgui_widgets.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+)
+
+target_include_directories(imgui SYSTEM PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_link_libraries(imgui PUBLIC SDL3::SDL3)
+
 # Catch2 - For Testing
 if(EXCALCORE_UNIT_TESTS)
   add_subdirectory(Catch2)

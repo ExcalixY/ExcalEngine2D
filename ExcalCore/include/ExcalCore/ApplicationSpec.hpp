@@ -1,11 +1,12 @@
 #pragma once
 
-#include <glm/vec2.hpp>
+#include <cstdint>
+#include <glm/ext/vector_int2.hpp>
 #include <string>
 
 namespace ExcalCore {
 
-enum class FullscreenState {
+enum class FullscreenState : uint8_t {
   BORDERLESS,
   WINDOWED,
   FULLSCREEN,
@@ -16,6 +17,7 @@ struct WindowSpec {
   FullscreenState fullscreenState = FullscreenState::BORDERLESS;
   bool allowResize = false;
   bool alwaysOnTop = false;
+  bool startMaximized = true;
 };
 
 struct RendererSpec {
@@ -30,7 +32,8 @@ struct AssetSpec {
 };
 
 struct TimeSpec {
-  float maxDelta = 0.02f;
+  float maxDelta = 0.2f;
+  float fixedTimeStep = 0.02f;
 };
 
 struct InputSpec { };

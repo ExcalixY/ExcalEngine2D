@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <memory>
 #include <vector>
 
 #include "ExcalCore/ApplicationSpec.hpp"
@@ -13,24 +15,33 @@ public:
   explicit LayerStack(ApplicationSpec& spec);
   ~LayerStack();
 
-  void PushLayer(Layer* layer);
-  void PushOverlay(Layer* layer);
+  LayerStack(const LayerStack&) = delete;
+  LayerStack& operator=(const LayerStack&) = delete;
+
+  [[nodiscard]]
+  static LayerStack* GetInstance();
+
+  void PushLayer(std::unique_ptr<Layer> layer);
+  void PushOverlay(std::unique_ptr<Layer> layer);
 
   void PopLayer(Layer* layer);
   void PopOverlay(Layer* layer);
 
+  void OnStart();
   void OnUpdate(float dt);
   void OnRender(Renderer2D& renderer);
 
-  std::vector<Layer*>::iterator begin();
-  std::vector<Layer*>::iterator end();
+  std::vector<std::unique_ptr<Layer>>::iterator begin();
+  std::vector<std::unique_ptr<Layer>>::iterator end();
 
-  std::vector<Layer*>::reverse_iterator rbegin();
-  std::vector<Layer*>::reverse_iterator rend();
+  std::vector<std::unique_ptr<Layer>>::reverse_iterator rbegin();
+  std::vector<std::unique_ptr<Layer>>::reverse_iterator rend();
 
 private:
-  std::vector<Layer*> m_Layers;
-  size_t m_InsertIndex;
+  static LayerStack* instance;
+
+  std::vector<std::unique_ptr<Layer>> m_Layers;
+  size_t m_InsertIndex = 0;
 };
 
 }
