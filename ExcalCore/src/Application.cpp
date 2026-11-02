@@ -1,8 +1,15 @@
 #include "ExcalCore/Application.hpp"
 
+#include <imgui.h>
+
+#include <concepts>
+#include <type_traits>
 #include <utility>
 
 #include "ExcalCore/ApplicationSpec.hpp"
+#include "ExcalCore/Events/EventTypes/InputEvents.hpp"
+#include "ExcalCore/Events/EventTypes/KeyEvents.hpp"
+#include "ExcalCore/Events/EventTypes/MouseEvents.hpp"
 #include "ExcalCore/Events/EventTypes/WindowShouldCloseEvent.hpp"
 #include "ExcalCore/Rendering/Renderer2D.hpp"
 #include "ExcalCore/Rendering/Window.hpp"
@@ -10,6 +17,7 @@
 #include "ExcalCore/Systems/InputSystem.hpp"
 #include "ExcalCore/Systems/TimeSystem.hpp"
 #include "ExcalCore/Utils/Logging.hpp"
+#include "SDL3/SDL_events.h"
 
 namespace ExcalCore {
 
@@ -24,7 +32,8 @@ Application::Application(ApplicationSpec spec)
       m_Time(m_Spec),
       m_Input(m_Spec),
       m_Events(m_Spec),
-      m_Layers(m_Spec) {
+      m_Layers(m_Spec),
+      m_ImGUI(m_Spec, m_Window, m_Renderer) {
   if (instance) {
     Debug::ThrowError(
       Debug::CATEGORY_ENGINE,
@@ -41,17 +50,41 @@ void Application::Run() {
   m_Running = true;
   m_Time.Reset();
 
-  m_Layers.OnStart();
+  m_Layers.OnApplicationStart();
 
   while (m_Running) {
     // Update Time
     m_Time.Tick();
 
     // Update Events
-    m_Input.BeginFrame();
+    m_Input.OnFrameStart();
+
+    m_Layers.OnFrameStart();
+    m_ImGUI.OnFrameStart();
 
     // Events
-    m_Events.PollEvents([&](auto&& event) {
+    m_Events.PollEvents([&](auto&& event, SDL_Event* sdl_event) {
+      m_ImGUI.ProcessEvent(sdl_event);
+
+      using T = std::remove_cvref_t<decltype(event)>;
+
+      auto& io = ImGui::GetIO();
+
+      constexpr bool is_release = std::same_as<T, KeyReleasedEvent> ||
+                                  std::same_as<T, MouseButtonReleasedEvent>;
+
+      if constexpr (!is_release) {
+        if constexpr (std::derived_from<T, MouseEvent>) {
+          if (io.WantCaptureMouse) {
+            return;
+          }
+        } else if constexpr (std::derived_from<T, KeyboardEvent>) {
+          if (io.WantCaptureKeyboard) {
+            return;
+          }
+        }
+      }
+
       m_Events.DispatchEvent(event, *this, m_Window, m_Renderer, m_Input);
     });
     m_Events.UpdateEvents();
@@ -62,7 +95,13 @@ void Application::Run() {
     // Rendering Loop
     m_Renderer.BeginFrame();
     m_Layers.OnRender(m_Renderer);
+    m_Renderer.ProcessDrawCommands();
+    m_ImGUI.OnRender(m_Renderer);
     m_Renderer.EndFrame();
+
+    m_ImGUI.OnFrameEnd();
+
+    m_Layers.OnFrameEnd();
   }
 }
 

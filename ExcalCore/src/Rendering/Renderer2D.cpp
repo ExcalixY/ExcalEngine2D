@@ -89,7 +89,7 @@ void Renderer2D::SubmitDrawCommand(const DrawCommand& command) {
   m_CommandBuffer.push_back(command);
 }
 
-void Renderer2D::EndFrame() {
+void Renderer2D::ProcessDrawCommands() {
   std::ranges::stable_sort(m_CommandBuffer, {}, &DrawCommand::layer);
 
   for (auto& command : m_CommandBuffer) {
@@ -154,7 +154,9 @@ void Renderer2D::EndFrame() {
       );
     }
   }
+}
 
+void Renderer2D::EndFrame() {
   SDL_RenderPresent(m_Renderer);
 }
 

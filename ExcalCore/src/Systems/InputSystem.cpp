@@ -48,7 +48,7 @@ const InputSystem* InputSystem::GetInstance() {
   return instance;
 }
 
-void InputSystem::BeginFrame() {
+void InputSystem::OnFrameStart() {
   m_KeysPressed.reset();
   m_KeysReleased.reset();
 

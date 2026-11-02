@@ -5,11 +5,11 @@
 
 #include <string_view>
 
-#include "ExcalCore/Events/Event.hpp"
+#include "ExcalCore/Events/EventTypes/InputEvents.hpp"
 
 namespace ExcalCore {
 
-struct KeyPressedEvent : Event {
+struct KeyPressedEvent : KeyboardEvent {
   static constexpr std::string_view Name = "KeyPressed";
 
   SDL_Keycode key = SDLK_UNKNOWN;
@@ -18,7 +18,7 @@ struct KeyPressedEvent : Event {
   bool repeat = false;
 };
 
-struct KeyReleasedEvent : Event {
+struct KeyReleasedEvent : KeyboardEvent {
   static constexpr std::string_view Name = "KeyReleased";
 
   SDL_Keycode key = SDLK_UNKNOWN;

@@ -28,6 +28,7 @@ public:
 
   void BeginFrame();
   void SubmitDrawCommand(const DrawCommand& command);
+  void ProcessDrawCommands();
   void EndFrame();
 
   // [[nodiscard]]
@@ -45,5 +46,4 @@ private:
 
   std::vector<DrawCommand> m_CommandBuffer;
 };
-
 }

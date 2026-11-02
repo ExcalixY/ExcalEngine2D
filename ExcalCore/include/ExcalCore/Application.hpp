@@ -11,6 +11,7 @@
 #include "ExcalCore/Rendering/Window.hpp"
 #include "ExcalCore/Systems/AssetManager.hpp"
 #include "ExcalCore/Systems/EventSystem.hpp"
+#include "ExcalCore/Systems/ImGUISystem.hpp"
 #include "ExcalCore/Systems/InputSystem.hpp"
 #include "ExcalCore/Systems/TimeSystem.hpp"
 
@@ -70,6 +71,8 @@ private:
   EventSystem m_Events;
 
   LayerStack m_Layers;
+
+  ImGUISystem m_ImGUI;
 
   bool m_Running = false;
 };

@@ -1,5 +1,9 @@
 #include "ExcalCore/ECS/ECSRegistry.hpp"
 
+#include <algorithm>
+#include <typeindex>
+#include <utility>
+
 #include "ExcalCore/ECS/Entity.hpp"
 
 namespace ExcalCore {
@@ -29,16 +33,36 @@ void ECSRegistry::DeleteEntity(Entity entity) {
     return;
   }
 
-  m_DeadIDs.push_back(entity.id);
   ++m_IdGens[entity.id];
 
-  for (auto& [id, set] : m_DataSets) {
-    set.get()->Remove(entity);
-  }
+  m_RemovalQueue.emplace_back(entity, typeid(void));
 }
 
 bool ECSRegistry::IsAlive(const Entity entity) const {
   return entity.id < m_IdGens.size() && entity.gen == m_IdGens[entity.id];
+}
+
+void ECSRegistry::FlushRemoval() {
+  std::for_each(
+    m_RemovalQueue.begin(),
+    m_RemovalQueue.end(),
+    [this](std::pair<Entity, std::type_index>& entry) {
+      if (entry.second == typeid(void)) {
+        m_DeadIDs.push_back(entry.first.id);
+
+        for (auto& [id, set] : m_DataSets) {
+          set.get()->Remove(entry.first);
+        }
+      } else {
+        auto it = m_DataSets.find(entry.second);
+        if (it != m_DataSets.end()) {
+          it->second.get()->Remove(entry.first);
+        }
+      }
+    }
+  );
+
+  m_RemovalQueue.clear();
 }
 
 }

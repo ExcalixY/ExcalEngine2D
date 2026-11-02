@@ -154,7 +154,7 @@ public:
   const T* TryGet(Entity entity) const {
     size_t i = GetDenseIndex(entity);
 
-    if (i != SPARSESET_INVALID_INDEX) {
+    if (i != SPARSESET_INVALID_INDEX && m_Dense[i].gen == entity.gen) {
       return &m_Data[i];
     } else {
       return nullptr;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3_ttf/SDL_ttf.h>
+#include <imgui.h>
 
 #include <memory>
 #include <string>
@@ -18,13 +19,8 @@ public:
   FontAsset(FontAsset&&) = delete;
   FontAsset& operator=(const FontAsset&) = delete;
 
-  explicit FontAsset(TTF_Font* font, float fontSize)
-      : m_Font(font), m_FontSize(fontSize) { }
-
-  ~FontAsset() {
-    TTF_CloseFont(m_Font);
-    m_Font = nullptr;
-  }
+  explicit FontAsset(ImFont* font, float fontSize);
+  ~FontAsset();
 
   [[nodiscard]]
   static std::shared_ptr<FontAsset> Load(
@@ -32,7 +28,7 @@ public:
   );
 
 private:
-  TTF_Font* m_Font;
+  ImFont* m_Font;
   float m_FontSize;
 };
 

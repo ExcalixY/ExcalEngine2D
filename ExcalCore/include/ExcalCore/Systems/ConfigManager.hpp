@@ -3,27 +3,18 @@
 #include <string>
 
 #include "ExcalCore/ApplicationSpec.hpp"
-#include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
 class ConfigManager final {
 public:
-  explicit ConfigManager(ApplicationSpec& spec) {
-    if (instance) {
-      Debug::ThrowError(
-        Debug::CATEGORY_ENGINE,
-        "Attempted to initialize a second instance of ConfigManager."
-      );
-    }
+  ConfigManager(const ConfigManager&) = default;
+  ConfigManager(ConfigManager&&) = delete;
+  ConfigManager& operator=(const ConfigManager&) = default;
+  ConfigManager& operator=(ConfigManager&&) = delete;
 
-    Debug::Log("Initializing Config Manager..");
-    instance = this;
-  }
-
-  ~ConfigManager() {
-    instance = nullptr;
-  }
+  explicit ConfigManager(ApplicationSpec& spec);
+  ~ConfigManager();
 
   template <typename T>
   [[nodiscard]]

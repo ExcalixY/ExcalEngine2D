@@ -3,9 +3,12 @@
 #include <cmath>
 #include <glm/ext/vector_float3.hpp>
 
+#include "ExcalCore/ECS/Components/HierarchyComponent.hpp"
+#include "ExcalCore/ECS/Components/ObjectEnabledComponent.hpp"
 #include "ExcalCore/ECS/Components/Transform.hpp"
 #include "ExcalCore/ECS/ECSRegistry.hpp"
 #include "ExcalCore/ECS/Entity.hpp"
+#include "ExcalCore/ECS/Systems/HierarchyComponent.hpp"
 
 namespace ExcalCore::ECSSystems {
 
@@ -22,10 +25,28 @@ void UpdateLocalMatrices(ECSRegistry& ecs) {
   });
 }
 
-void UpdateGlobalMatrices(ECSRegistry& ecs) {
-  ecs.Each<Transform, WorldTransform>(
-    [](Entity, const Transform* t, WorldTransform* wt) {
-      wt->worldMatrix = t->localMatrix;
+void UpdateGlobalMatrices(ECSRegistry& ecs, Entity root) {
+  ECSSystems::WalkHierarchy<TreeWalkOrder::PRE>(
+    ecs, root, [&ecs, root](HierarchyComponent* hc_cur, Entity e_cur) -> bool {
+      if (e_cur == root) {
+        return true;
+      }
+
+      if (!ecs.HasComponent<ObjectEnabledComponent>(e_cur)) {
+        return false;
+      }
+
+      auto t = ecs.GetComponent<Transform>(e_cur);
+      auto tw = ecs.GetComponent<WorldTransform>(e_cur);
+
+      if (root == hc_cur->parent) {
+        tw->worldMatrix = t->localMatrix;
+      } else {
+        auto tw_parent = ecs.GetComponent<WorldTransform>(hc_cur->parent);
+        tw->worldMatrix = tw_parent->worldMatrix * t->localMatrix;
+      }
+
+      return true;
     }
   );
 }

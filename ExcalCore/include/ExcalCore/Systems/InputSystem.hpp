@@ -36,7 +36,7 @@ public:
   [[nodiscard]]
   static const InputSystem* GetInstance();
 
-  void BeginFrame();
+  void OnFrameStart();
 
   void OnEvent(KeyPressedEvent& e);
   void OnEvent(KeyReleasedEvent& e);

@@ -68,14 +68,7 @@ public:
   Bouncer(GameObject& obj, ECSRegistry& ecs, glm::vec2 velocity)
       : Behavior(obj), m_Velocity(velocity) { }
 
-  void OnAwake() override {
-    m_Handle = Events::Subscribe<WindowResizeEvent>(
-      [&](const WindowResizeEvent& e) -> bool {
-        s_ScreenSize = {e.width, e.height};
-        return false;
-      }
-    );
-  }
+  void OnAwake() override { }
 
   void OnUpdate() override {
     Bounce(m_Transform->pos, m_Velocity, Time::GetDeltaTime());
@@ -128,6 +121,15 @@ public:
       m_InstanceCount,
       static_cast<double>(SDL_GetTicksNS() - start) / 1e6
     );
+
+    m_Handle = Events::Subscribe<WindowResizeEvent>([this](auto& e) {
+      return this->OnEvent(e);
+    });
+  }
+
+  bool OnEvent(WindowResizeEvent& e) {
+    s_ScreenSize = {e.width, e.height};
+    return false;
   }
 
 private:
@@ -202,7 +204,7 @@ int main(int argc, char* argv[]) {
       .name = "ExcalStress: Behavior",
       .windowSpec =
         {.fullscreenState = FullscreenState::WINDOWED, .allowResize = true},
-      .rendererSpec = {.vsync = true},
+      .rendererSpec = {.vsync = false},
     });
 
     app.PushLayer<StressLayer>(instance_count);

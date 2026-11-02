@@ -83,8 +83,7 @@ void UpdateBouncers(ECSRegistry& ecs, float dt) {
 
 class StressScene : public Scene {
 public:
-  StressScene(ECSRegistry& ecs, int instance_count)
-      : Scene(), m_InstanceCount(instance_count) { }
+  StressScene(int instance_count) : Scene(), m_InstanceCount(instance_count) { }
 
   void OnInit() override {
     auto texture =
@@ -124,6 +123,11 @@ public:
     );
   }
 
+  void OnUpdate(float dt) override {
+    UpdateBouncers(GetECS(), Time::GetDeltaTime());
+    Scene::OnUpdate(dt);
+  }
+
 private:
   int m_InstanceCount;
 };
@@ -132,7 +136,7 @@ class StressLayer : public Layer {
 public:
   explicit StressLayer(int instance_count)
       : Layer("StressComponent"),
-        m_Scene(m_ECS, instance_count),
+        m_Scene(instance_count),
         m_InstanceCount(instance_count) { }
 
   void OnAttach() override {
@@ -145,7 +149,7 @@ public:
     UpdateScreenSize();
 
     m_Scene.OnFrameStart();
-    UpdateBouncers(m_ECS, Time::GetDeltaTime());
+    UpdateBouncers(m_Scene.GetECS(), Time::GetDeltaTime());
     m_Scene.OnUpdate(dt);
 
     ReportFps();
@@ -183,7 +187,6 @@ private:
     m_LastReport = now;
   }
 
-  ECSRegistry m_ECS;
   StressScene m_Scene;
 
   int m_InstanceCount;

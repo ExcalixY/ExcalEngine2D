@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstdint>
 #include <functional>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -23,7 +24,13 @@ template <typename TEvent>
   requires(std::derived_from<TEvent, Event>)
 class EventContainer : public IEventContainer {
 public:
-  uint64_t InsertCallback(std::function<bool(TEvent&)> fn) {
+  struct EventEntry {
+    uint64_t id;
+    int priority;
+    std::function<bool(TEvent&)> callback;
+  };
+
+  uint64_t InsertCallback(std::function<bool(TEvent&)> fn, int priority = 0) {
     uint64_t id = 0;
 
     if (!m_FreeIndices.empty()) {
@@ -33,29 +40,28 @@ public:
       id = m_Callbacks.size();
     }
 
-    m_Callbacks.emplace_back(id, fn);
+    auto pos = std::ranges::upper_bound(
+      m_Callbacks, priority, std::greater{}, &EventEntry::priority
+    );
+    m_Callbacks.emplace(pos, id, priority, std::move(fn));
+
     return id;
   }
 
   void RemoveCallback(uint64_t id) override {
-    auto it = std::ranges::find_if(
-      m_Callbacks,
-      [id](const std::pair<uint64_t, std::function<bool(TEvent&)>>& s) {
-        return s.first == id;
-      }
-    );
+    auto it = std::ranges::find_if(m_Callbacks, [id](const EventEntry& entry) {
+      return entry.id == id;
+    });
 
     if (it != m_Callbacks.end()) {
-      std::swap(m_Callbacks.back(), *it);
-      m_Callbacks.pop_back();
-
+      m_Callbacks.erase(it);
       m_FreeIndices.push_back(id);
     }
   }
 
   void ExecuteCallbacks(TEvent& e) {
-    for (auto& c : m_Callbacks) {
-      if (c.second(e)) {
+    for (auto& entry : m_Callbacks) {
+      if (entry.callback(e)) {
         return;
       }
     }
@@ -74,7 +80,7 @@ public:
   }
 
 private:
-  std::vector<std::pair<uint64_t, std::function<bool(TEvent&)>>> m_Callbacks;
+  std::vector<EventEntry> m_Callbacks;
   std::vector<uint64_t> m_FreeIndices;
 
   std::vector<TEvent> m_EventQueue;

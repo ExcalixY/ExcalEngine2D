@@ -9,11 +9,14 @@ namespace ExcalCore {
 struct Entity {
   uint32_t id;
   uint32_t gen;
+
+  bool operator==(const Entity& other) const {
+    return (other.id == id && other.gen == gen);
+  }
 };
 
 static constexpr Entity EMPTY_ENTITY = {
-  .id = std::numeric_limits<uint32_t>::max(),
-  .gen = std::numeric_limits<uint32_t>::max()
+  std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()
 };
 
 }

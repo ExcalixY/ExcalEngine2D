@@ -14,9 +14,11 @@ public:
   virtual void OnAttach() { }
   virtual void OnDetach() { }
 
-  virtual void OnStart() { }
+  virtual void OnApplicationStart() { }
+  virtual void OnFrameStart() { }
   virtual void OnUpdate(float dt) { }
   virtual void OnRender(Renderer2D& renderer) { }
+  virtual void OnFrameEnd() { }
 
   [[nodiscard]]
   const std::string& GetName() const {

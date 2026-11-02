@@ -8,6 +8,7 @@
 
 #include "ExcalCore/ECS/Components/BehaviorComponent.hpp"
 #include "ExcalCore/ECS/ECSRegistry.hpp"
+#include "ExcalCore/ECS/Entity.hpp"
 #include "ExcalCore/Objects/GameObject.hpp"
 #include "ExcalCore/Rendering/Renderer2D.hpp"
 #include "ExcalCore/Scripting/Behavior.hpp"
@@ -27,12 +28,14 @@ public:
 
   virtual void OnInit() = 0;
 
-  void OnFrameStart();
-  void OnUpdate(float dt);
-  void OnRender(Renderer2D& renderer);
-  void OnFrameEnd();
+  virtual void OnFrameStart();
+  virtual void OnUpdate(float dt);
+  virtual void OnRender(Renderer2D& renderer);
+  virtual void OnFrameEnd();
 
   void UnloadAllObjects();
+
+  ECSRegistry& GetECS();
 
   [[nodiscard]]
   GameObject* CreateObject(
@@ -41,24 +44,7 @@ public:
 
   template <typename T, typename... TArgs>
     requires std::derived_from<T, Behavior>
-  T* AttachBehavior(GameObject* obj, TArgs&&... args) {
-    if (!obj) {
-      return nullptr;
-    }
-
-    auto comp = m_ECS.AddComponent<BehaviorComponent>(obj->m_EntityHandle);
-    if (!comp || comp->behavior) {
-      return nullptr;
-    }
-
-    comp->behavior =
-      std::make_unique<T>(*obj, m_ECS, std::forward<TArgs>(args)...);
-
-    comp->behavior->OnAwake();
-    obj->EnableObjectFlags(GameObject::Flags::CONTAINS_BEHAVIOR);
-
-    return static_cast<T*>(comp->behavior.get());
-  }
+  T* AttachBehavior(GameObject* obj, TArgs&&... args);
 
 protected:
   std::vector<std::unique_ptr<GameObject>> m_GameObjects;
@@ -66,6 +52,29 @@ protected:
 
 private:
   ECSRegistry m_ECS;
+  Entity m_RootEntity;
 };
+
+template <typename T, typename... TArgs>
+  requires std::derived_from<T, Behavior>
+T* Scene::AttachBehavior(GameObject* obj, TArgs&&... args) {
+  if (!obj) {
+    return nullptr;
+  }
+
+  auto comp = m_ECS.AddComponent<BehaviorComponent>(obj->m_EntityHandle);
+  if (!comp || comp->behavior) {
+    return nullptr;
+  }
+
+  comp->behavior =
+    std::make_unique<T>(*obj, m_ECS, std::forward<TArgs>(args)...);
+
+  comp->behavior->OnAwake();
+
+  obj->EnableObjectFlags(GameObject::Flags::CONTAINS_BEHAVIOR);
+
+  return static_cast<T*>(comp->behavior.get());
+}
 
 }

@@ -17,13 +17,15 @@ namespace ExcalCore {
 
 class GameObject final {
 public:
-  enum class Flags : uint8_t {
+  enum class Flags : uint16_t {
     QUEUE_DESTROY,
     QUEUE_ENABLE,
     QUEUE_DISABLE,
     ENABLED,
 
-    CONTAINS_BEHAVIOR
+    CONTAINS_BEHAVIOR,
+    HAS_CHILDREN,
+    HAS_PARENT
   };
 
   GameObject(Entity entity, const std::string& name, ECSRegistry& ecs)
@@ -36,7 +38,7 @@ public:
     return m_Name;
   }
 
-  void Delete() {
+  void Destroy() {
     EnableObjectFlags(Flags::QUEUE_DESTROY);
   }
 
@@ -61,9 +63,8 @@ public:
 
   template <ComponentType T>
     requires(
-      !std::same_as<T, Transform> && !std::same_as<T, WorldTransform>
-      // && !std::same_as<T, HierarchyComponent>
-      //  TODO: Remove comment after implementing HierarchyComponent
+      !std::same_as<T, Transform> && !std::same_as<T, WorldTransform> &&
+      !std::same_as<T, HierarchyComponent>
     )
   void RemoveComponent();
 
@@ -98,7 +99,7 @@ private:
   Entity m_EntityHandle;
   ECSRegistry& m_ECSRegistry;
 
-  std::bitset<8> m_Flags;
+  std::bitset<16> m_Flags;
 
   std::string m_Name;
 };
@@ -125,9 +126,8 @@ bool GameObject::HasComponent() const {
 
 template <ComponentType T>
   requires(
-    !std::same_as<T, Transform> && !std::same_as<T, WorldTransform>
-    // && !std::same_as<T, HierarchyComponent>
-    //  TODO: Remove comment after implementing HierarchyComponent
+    !std::same_as<T, Transform> && !std::same_as<T, WorldTransform> &&
+    !std::same_as<T, HierarchyComponent>
   )
 void GameObject::RemoveComponent() {
   m_ECSRegistry.RemoveComponent<T>(m_EntityHandle);

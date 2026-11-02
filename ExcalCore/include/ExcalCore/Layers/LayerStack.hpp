@@ -27,9 +27,11 @@ public:
   void PopLayer(Layer* layer);
   void PopOverlay(Layer* layer);
 
-  void OnStart();
+  void OnApplicationStart();
+  void OnFrameStart();
   void OnUpdate(float dt);
   void OnRender(Renderer2D& renderer);
+  void OnFrameEnd();
 
   std::vector<std::unique_ptr<Layer>>::iterator begin();
   std::vector<std::unique_ptr<Layer>>::iterator end();

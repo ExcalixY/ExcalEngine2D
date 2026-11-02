@@ -4,6 +4,7 @@
 #include <SDL3/SDL_mouse.h>
 
 #include <concepts>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -43,12 +44,13 @@ public:
   void DispatchEvent(TEvent& event, TSystems&... systems);
 
   template <typename TCallback>
+    requires(std::invocable<TCallback, Event, SDL_Event*>)
   void PollEvents(TCallback&& callback);
 
   template <typename TEvent, typename TFunc>
     requires(std::derived_from<TEvent, Event> && std::invocable<TFunc, TEvent&>)
   [[nodiscard]]
-  EventHandle Subscribe(TFunc&& callback);
+  EventHandle Subscribe(TFunc&& callback, size_t priority = 0);
 
   void Unsubscribe(EventHandle& handle);
 
@@ -82,6 +84,7 @@ void EventSystem::DispatchEvent(TEvent& event, TSystems&... systems) {
 }
 
 template <typename TCallback>
+  requires(std::invocable<TCallback, Event, SDL_Event*>)
 void EventSystem::PollEvents(TCallback&& callback) {
   SDL_Event e;
 
@@ -89,7 +92,7 @@ void EventSystem::PollEvents(TCallback&& callback) {
     switch (e.type) {
       case SDL_EVENT_QUIT:
       case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-        callback(WindowShouldCloseEvent{});
+        callback(WindowShouldCloseEvent{}, &e);
         break;
 
       case SDL_EVENT_WINDOW_RESIZED:
@@ -97,7 +100,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
           WindowResizeEvent{
             .width = e.window.data1,
             .height = e.window.data2,
-          }
+          },
+          &e
         );
         break;
 
@@ -106,7 +110,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
         callback(
           WindowFocusEvent{
             .focused = e.type == SDL_EVENT_WINDOW_FOCUS_GAINED,
-          }
+          },
+          &e
         );
         break;
 
@@ -117,7 +122,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
             .scancode = e.key.scancode,
             .modifiers = e.key.mod,
             .repeat = e.key.repeat,
-          }
+          },
+          &e
         );
         break;
 
@@ -127,7 +133,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
             .key = e.key.key,
             .scancode = e.key.scancode,
             .modifiers = e.key.mod,
-          }
+          },
+          &e
         );
         break;
 
@@ -136,7 +143,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
           MouseMovedEvent{
             .position = {e.motion.x, e.motion.y},
             .delta = {e.motion.xrel, e.motion.yrel},
-          }
+          },
+          &e
         );
         break;
 
@@ -146,7 +154,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
             .button = e.button.button,
             .position = {e.button.x, e.button.y},
             .clicks = e.button.clicks,
-          }
+          },
+          &e
         );
         break;
 
@@ -155,7 +164,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
           MouseButtonReleasedEvent{
             .button = e.button.button,
             .position = {e.button.x, e.button.y},
-          }
+          },
+          &e
         );
         break;
 
@@ -167,7 +177,8 @@ void EventSystem::PollEvents(TCallback&& callback) {
           MouseScrolledEvent{
             .delta = {e.wheel.x * direction, e.wheel.y * direction},
             .position = {e.wheel.mouse_x, e.wheel.mouse_y},
-          }
+          },
+          &e
         );
         break;
       }
@@ -180,10 +191,10 @@ void EventSystem::PollEvents(TCallback&& callback) {
 
 template <typename TEvent, typename TFunc>
   requires(std::derived_from<TEvent, Event> && std::invocable<TFunc, TEvent&>)
-EventHandle EventSystem::Subscribe(TFunc&& callback) {
+EventHandle EventSystem::Subscribe(TFunc&& callback, size_t priority) {
   return EventHandle(
     GetContainer<TEvent>().InsertCallback(
-      std::function<bool(TEvent&)>(callback)
+      std::function<bool(TEvent&)>(callback), priority
     ),
     typeid(TEvent)
   );
@@ -226,9 +237,9 @@ namespace Events {
 template <typename TEvent, typename TFunc>
   requires(std::derived_from<TEvent, Event> && std::invocable<TFunc, TEvent&>)
 [[nodiscard]]
-EventHandle Subscribe(TFunc&& callback) {
+EventHandle Subscribe(TFunc&& callback, size_t priority = 0) {
   return EventSystem::GetInstance()->Subscribe<TEvent>(
-    std::forward<TFunc>(callback)
+    std::forward<TFunc>(callback), priority
   );
 }
 

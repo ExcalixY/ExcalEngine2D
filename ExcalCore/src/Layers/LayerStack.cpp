@@ -94,9 +94,9 @@ void LayerStack::PopOverlay(Layer* layer) {
   m_Layers.erase(it);
 }
 
-void LayerStack::OnStart() {
+void LayerStack::OnApplicationStart() {
   for (auto& layer : m_Layers) {
-    layer->OnStart();
+    layer->OnApplicationStart();
   }
 }
 
@@ -108,6 +108,18 @@ void LayerStack::OnUpdate(float dt) {
 void LayerStack::OnRender(Renderer2D& renderer) {
   for (auto& layer : m_Layers) {
     layer->OnRender(renderer);
+  }
+}
+
+void LayerStack::OnFrameStart() {
+  for (auto& layer : m_Layers) {
+    layer->OnFrameStart();
+  }
+}
+
+void LayerStack::OnFrameEnd() {
+  for (auto& layer : m_Layers) {
+    layer->OnFrameEnd();
   }
 }
 

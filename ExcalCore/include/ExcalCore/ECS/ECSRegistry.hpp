@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <ranges>
@@ -9,6 +10,7 @@
 #include <tuple>
 #include <typeindex>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Components/Component.hpp"
@@ -54,6 +56,8 @@ public:
   [[nodiscard]]
   bool HasComponent(const Entity& entity) const;
 
+  void FlushRemoval();
+
 private:
   template <ComponentType T>
   [[nodiscard]]
@@ -63,6 +67,8 @@ private:
   std::vector<uint32_t> m_IdGens;
 
   uint32_t m_NextID = 0;
+
+  std::vector<std::pair<Entity, std::type_index>> m_RemovalQueue;
 
   std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> m_DataSets;
 };
@@ -126,25 +132,38 @@ T* ECSRegistry::AddComponent(const Entity& entity, TArgs&&... args) {
     return nullptr;
   }
 
+  size_t count = std::erase_if(m_RemovalQueue, [&entity](auto& entry) {
+    return entity == entry.first && typeid(T) == entry.second;
+  });
+
   auto& set = GetSet<T>();
+
+  if (count) {
+    auto c = set.TryGet(entity);
+
+    if (c) {
+      *c = T(std::forward<TArgs>(args)...);
+    }
+
+    return c;
+  }
+
   return set.Emplace(entity, std::forward<TArgs>(args)...);
 }
 
 template <ComponentType T>
 T* ECSRegistry::GetComponent(const Entity& entity) {
+  if (!IsAlive(entity)) {
+    return nullptr;
+  }
+
   auto& set = GetSet<T>();
   return set.TryGet(entity);
 }
 
 template <ComponentType T>
 void ECSRegistry::RemoveComponent(const Entity& entity) {
-  auto it = m_DataSets.find(std::type_index(typeid(T)));
-  if (it == m_DataSets.end()) {
-    return;
-  }
-
-  auto& set = *static_cast<SparseSet<T>*>(it->second.get());
-  set.Remove(entity);
+  m_RemovalQueue.emplace_back(entity, typeid(T));
 }
 
 template <ComponentType T>
