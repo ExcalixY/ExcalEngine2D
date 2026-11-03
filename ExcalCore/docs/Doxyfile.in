@@ -1,0 +1,23 @@
+PROJECT_NAME           = "ExcalEngine2D"
+PROJECT_BRIEF          = "@PROJECT_DESCRIPTION@"
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_SOURCE_DIR@/docs
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include @CMAKE_CURRENT_SOURCE_DIR@/docs
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.md
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/docs/html
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/mainpage.md
+STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/include
+
+EXTRACT_ALL            = YES
+BUILTIN_STL_SUPPORT    = YES
+WARN_IF_UNDOCUMENTED   = NO
+QUIET                  = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+HTML_COLORSTYLE        = LIGHT
+HTML_EXTRA_STYLESHEET  = @DOXYGEN_AWESOME_DIR@/doxygen-awesome.css \
+                         @DOXYGEN_AWESOME_DIR@/doxygen-awesome-sidebar-only.css
+
+HAVE_DOT               = @DOXYGEN_HAVE_DOT@

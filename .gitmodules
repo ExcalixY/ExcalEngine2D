@@ -20,3 +20,11 @@
 	path = libs/imgui
 	url = https://github.com/ocornut/imgui
 	branch = docking
+[submodule "libs/doxygen"]
+	path = libs/doxygen
+	url = https://github.com/doxygen/doxygen
+	shallow = true
+[submodule "libs/doxygen-awesome-css"]
+	path = libs/doxygen-awesome-css
+	url = https://github.com/jothepro/doxygen-awesome-css
+	shallow = true

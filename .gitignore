@@ -3,3 +3,5 @@ out/*
 log.txt
 compile_commands.json
 test.log
+ExcalCore/docs/html/
+imgui.ini

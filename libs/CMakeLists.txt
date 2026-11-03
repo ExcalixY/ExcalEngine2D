@@ -58,3 +58,18 @@ target_link_libraries(imgui PUBLIC SDL3::SDL3)
 if(EXCALCORE_UNIT_TESTS)
   add_subdirectory(Catch2)
 endif()
+
+# Doxygen - built for the host on demand, only by the docs target
+include(ExternalProject)
+
+ExternalProject_Add(doxygen_build
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doxygen
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+  INSTALL_COMMAND ""
+  BUILD_BYPRODUCTS <BINARY_DIR>/bin/doxygen
+  EXCLUDE_FROM_ALL TRUE
+)
+
+ExternalProject_Get_Property(doxygen_build BINARY_DIR)
+set(DOXYGEN_EXECUTABLE ${BINARY_DIR}/bin/doxygen CACHE INTERNAL "")
+set(DOXYGEN_AWESOME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doxygen-awesome-css CACHE INTERNAL "")
