@@ -6,10 +6,14 @@
 
 namespace ExcalCore {
 
+class Scene;
+
 class Behavior {
 public:
-  Behavior(GameObject& obj)
-      : m_GameObject(obj), m_Transform(obj.GetComponentRef<Transform>()) { }
+  Behavior(GameObject& obj, Scene& scene)
+      : gameObject(obj),
+        transform(obj.GetComponentRef<Transform>()),
+        m_Scene(scene) { }
 
   virtual ~Behavior() = default;
 
@@ -25,8 +29,13 @@ public:
 
   virtual void OnDestroy() { }
 
-  GameObject& m_GameObject;
-  ECSRef<Transform> m_Transform;
+  GameObject* CreateObject();
+
+  GameObject& gameObject;
+  ECSRef<Transform> transform;
+
+private:
+  Scene& m_Scene;
 };
 
 }

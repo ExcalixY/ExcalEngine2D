@@ -90,7 +90,7 @@ void Renderer2D::SubmitDrawCommand(const DrawCommand& command) {
 }
 
 void Renderer2D::ProcessDrawCommands() {
-  std::ranges::stable_sort(m_CommandBuffer, {}, &DrawCommand::layer);
+  std::ranges::stable_sort(m_CommandBuffer, {}, &DrawCommand::drawOrder);
 
   for (auto& command : m_CommandBuffer) {
     if (!command.texture) {

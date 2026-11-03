@@ -4,6 +4,7 @@
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_surface.h>
 
+#include <cstdint>
 #include <optional>
 
 #include "ExcalCore/Assets/TextureAsset.hpp"
@@ -18,7 +19,7 @@ struct DrawCommand {
   std::optional<SDL_FPoint> pivot;
   SDL_FlipMode flip = SDL_FLIP_NONE;
   SDL_FColor color = {1.0f, 1.0f, 1.0f, 1.0f};
-  int layer = 0;
+  uint64_t drawOrder = 0;
 };
 
 }

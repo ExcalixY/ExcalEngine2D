@@ -3,6 +3,7 @@
 #include <cxxabi.h>
 #include <imgui.h>
 
+#include <cinttypes>
 #include <cstdint>
 #include <cstdlib>
 #include <format>
@@ -206,7 +207,7 @@ void HierarchyPanel::DrawInspector() {
   if (auto* sprite = obj->GetComponent<SpriteRenderer>()) {
     if (ImGui::CollapsingHeader("SpriteRenderer", open_flags)) {
       ImGui::Text("Texture  %s", sprite->texture ? "loaded" : "none");
-      ImGui::Text("Layer    %d", sprite->layer);
+      ImGui::Text("Layer    %" PRIu64, sprite->drawOrder);
       ImGui::Text(
         "Color    (%.2f, %.2f, %.2f, %.2f)",
         sprite->color.r,

@@ -8,6 +8,7 @@
 
 #include "ExcalCore/ApplicationSpec.hpp"
 #include "ExcalCore/Events/EventTypes/InputEvents.hpp"
+#include "ExcalCore/Events/EventTypes/InvalidEvent.hpp"
 #include "ExcalCore/Events/EventTypes/KeyEvents.hpp"
 #include "ExcalCore/Events/EventTypes/MouseEvents.hpp"
 #include "ExcalCore/Events/EventTypes/WindowShouldCloseEvent.hpp"
@@ -35,10 +36,7 @@ Application::Application(ApplicationSpec spec)
       m_Layers(m_Spec),
       m_ImGUI(m_Spec, m_Window, m_Renderer) {
   if (instance) {
-    Debug::ThrowError(
-      Debug::CATEGORY_ENGINE,
-      "Attempted to initialize a second instance of Application."
-    );
+    Debug::ThrowError(Debug::CATEGORY_ENGINE, "Attempted to initialize a second instance of Application.");
   }
 
   instance = this;
@@ -60,7 +58,6 @@ void Application::Run() {
     m_Input.OnFrameStart();
 
     m_Layers.OnFrameStart();
-    m_ImGUI.OnFrameStart();
 
     // Events
     m_Events.PollEvents([&](auto&& event, SDL_Event* sdl_event) {
@@ -70,8 +67,7 @@ void Application::Run() {
 
       auto& io = ImGui::GetIO();
 
-      constexpr bool is_release = std::same_as<T, KeyReleasedEvent> ||
-                                  std::same_as<T, MouseButtonReleasedEvent>;
+      constexpr bool is_release = std::same_as<T, KeyReleasedEvent> || std::same_as<T, MouseButtonReleasedEvent>;
 
       if constexpr (!is_release) {
         if constexpr (std::derived_from<T, MouseEvent>) {
@@ -85,12 +81,16 @@ void Application::Run() {
         }
       }
 
-      m_Events.DispatchEvent(event, *this, m_Window, m_Renderer, m_Input);
+      if constexpr (!std::same_as<T, InvalidEvent>) {
+        m_Events.DispatchEvent(event, *this, m_Window, m_Renderer, m_Input);
+      }
     });
     m_Events.UpdateEvents();
 
     // Update Loop
     m_Layers.OnUpdate(m_Time.GetDeltaTime());
+
+    m_ImGUI.BeginRender();
 
     // Rendering Loop
     m_Renderer.BeginFrame();
@@ -111,9 +111,7 @@ Application::~Application() {
 
 Application* Application::GetInstance() {
   if (!instance) {
-    Debug::ThrowError(
-      Debug::CATEGORY_ENGINE, "Application has not been initialized."
-    );
+    Debug::ThrowError(Debug::CATEGORY_ENGINE, "Application has not been initialized.");
   }
 
   return instance;

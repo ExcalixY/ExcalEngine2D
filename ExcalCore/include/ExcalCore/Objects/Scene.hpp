@@ -42,6 +42,8 @@ public:
     const std::string& name, GameObject* parent = nullptr
   );
 
+  void DestroyObject(GameObject* obj = nullptr);
+
   template <typename T, typename... TArgs>
     requires std::derived_from<T, Behavior>
   T* AttachBehavior(GameObject* obj, TArgs&&... args);
@@ -51,6 +53,9 @@ protected:
   size_t m_ObjCount = 0;
 
 private:
+  void EnableHierarchy(Entity root, GameObject* obj);
+  void DisableHierarachy(Entity root, GameObject* obj);
+
   ECSRegistry m_ECS;
   Entity m_RootEntity;
 };
@@ -68,7 +73,7 @@ T* Scene::AttachBehavior(GameObject* obj, TArgs&&... args) {
   }
 
   comp->behavior =
-    std::make_unique<T>(*obj, m_ECS, std::forward<TArgs>(args)...);
+    std::make_unique<T>(*obj, *this, std::forward<TArgs>(args)...);
 
   comp->behavior->OnAwake();
 

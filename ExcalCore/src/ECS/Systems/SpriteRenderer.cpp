@@ -51,7 +51,7 @@ void IssueDrawCommands(ECSRegistry& ecs, Renderer2D& renderer) {
         .pivot = SDL_FPoint{pivot_px.x, pivot_px.y},
         .flip = s->flip,
         .color = s->color,
-        .layer = s->layer,
+        .drawOrder = s->drawOrder,
       });
     }
   );

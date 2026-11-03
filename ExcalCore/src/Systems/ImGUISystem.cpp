@@ -68,7 +68,7 @@ ImGUISystem::~ImGUISystem() {
   instance = nullptr;
 }
 
-void ImGUISystem::OnFrameStart() {
+void ImGUISystem::BeginRender() {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();

@@ -43,8 +43,17 @@ add_subdirectory(ExcalCore)
 add_subdirectory(ExcalSandbox)
 add_subdirectory(ExcalStressBehavior)
 add_subdirectory(ExcalStressComponent)
+add_subdirectory(ExcalTestGame)
 
 if(EXCALCORE_UNIT_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+add_custom_target(
+  RunSandbox
+  COMMAND ${OUT_DIR}/bin/ExcalSandbox
+  DEPENDS ExcalSandbox
+  WORKING_DIRECTORY ${OUT_DIR}/bin
+  USES_TERMINAL
+)

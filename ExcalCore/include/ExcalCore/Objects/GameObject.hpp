@@ -22,10 +22,10 @@ public:
     QUEUE_ENABLE,
     QUEUE_DISABLE,
     ENABLED,
+    ENABLED_IN_HIERARCHY,
 
     CONTAINS_BEHAVIOR,
-    HAS_CHILDREN,
-    HAS_PARENT
+    NEW_OBJECT,
   };
 
   GameObject(Entity entity, const std::string& name, ECSRegistry& ecs)
@@ -43,7 +43,16 @@ public:
   }
 
   void SetEnabled(bool enabled) {
+    // Queued Enable and Enabled or Queued Disable and Disabled
+    if (
+      (enabled && HasObjectFlags(Flags::ENABLED)) ||
+      (!enabled && !HasObjectFlags(Flags::ENABLED))
+    ) {
+      return;
+    }
+
     EnableObjectFlags((enabled ? Flags::QUEUE_ENABLE : Flags::QUEUE_DISABLE));
+    DisableObjectFlags((enabled ? Flags::QUEUE_DISABLE : Flags::QUEUE_ENABLE));
   }
 
   template <ComponentType T>

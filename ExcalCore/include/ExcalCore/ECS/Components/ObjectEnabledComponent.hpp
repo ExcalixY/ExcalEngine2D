@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component.hpp"
+#include "ExcalCore/ECS/Components/Component.hpp"
 
 namespace ExcalCore {
 

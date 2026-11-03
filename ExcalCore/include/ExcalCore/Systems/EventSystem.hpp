@@ -14,6 +14,7 @@
 #include "ExcalCore/Events/Event.hpp"
 #include "ExcalCore/Events/EventContainer.hpp"
 #include "ExcalCore/Events/EventHandle.hpp"
+#include "ExcalCore/Events/EventTypes/InvalidEvent.hpp"
 #include "ExcalCore/Events/EventTypes/KeyEvents.hpp"
 #include "ExcalCore/Events/EventTypes/MouseEvents.hpp"
 #include "ExcalCore/Events/EventTypes/WindowFocusEvent.hpp"
@@ -184,6 +185,7 @@ void EventSystem::PollEvents(TCallback&& callback) {
       }
 
       default:
+        callback(InvalidEvent{}, &e);
         break;
     }
   }

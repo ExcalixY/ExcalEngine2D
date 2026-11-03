@@ -17,7 +17,7 @@ public:
   void ProcessEvent(SDL_Event* e);
 
   void OnInit() { }
-  void OnFrameStart();
+  void BeginRender();
   void OnUpdate() { }
   void OnLateUpdate() { }
   void OnRender(Renderer2D& renderer);

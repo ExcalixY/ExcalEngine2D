@@ -65,13 +65,13 @@ void Bounce(glm::vec2& pos, glm::vec2& velocity, float dt) {
 
 class Bouncer : public Behavior {
 public:
-  Bouncer(GameObject& obj, ECSRegistry& ecs, glm::vec2 velocity)
-      : Behavior(obj), m_Velocity(velocity) { }
+  Bouncer(GameObject& obj, Scene& scene, glm::vec2 velocity)
+      : Behavior(obj, scene), m_Velocity(velocity) { }
 
   void OnAwake() override { }
 
   void OnUpdate() override {
-    Bounce(m_Transform->pos, m_Velocity, Time::GetDeltaTime());
+    Bounce(transform->pos, m_Velocity, Time::GetDeltaTime());
   }
 
 private:

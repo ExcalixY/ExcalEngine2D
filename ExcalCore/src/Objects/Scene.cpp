@@ -6,8 +6,8 @@
 #include <utility>
 
 #include "ExcalCore/ECS/Components/BehaviorComponent.hpp"
+#include "ExcalCore/ECS/Components/GameObjectRef.hpp"
 #include "ExcalCore/ECS/Components/HierarchyComponent.hpp"
-#include "ExcalCore/ECS/Components/ObjectDestroyComponent.hpp"
 #include "ExcalCore/ECS/Components/ObjectEnabledComponent.hpp"
 #include "ExcalCore/ECS/Components/Transform.hpp"
 #include "ExcalCore/ECS/ECSRegistry.hpp"
@@ -18,6 +18,7 @@
 #include "ExcalCore/Objects/GameObject.hpp"
 #include "ExcalCore/Rendering/Renderer2D.hpp"
 #include "ExcalCore/Systems/TimeSystem.hpp"
+#include "ExcalCore/Utils/Logging.hpp"
 
 namespace ExcalCore {
 
@@ -36,16 +37,121 @@ GameObject* Scene::CreateObject(const std::string& name, GameObject* parent) {
   m_ECS.AddComponent<WorldTransform>(e);
 
   m_ECS.AddComponent<HierarchyComponent>(e);
-  ECSSystems::SetParentOfEntity(
-    m_ECS, e, parent ? parent->m_EntityHandle : m_RootEntity
-  );
+  ECSSystems::SetParentOfEntity(m_ECS, e, parent ? parent->m_EntityHandle : m_RootEntity);
 
   auto ptr = std::make_unique<GameObject>(e, name, m_ECS);
+
   ptr->SetEnabled(true);
+
+  m_ECS.AddComponent<GameObjectRef>(e)->object = ptr.get();
 
   m_GameObjects.push_back(std::move(ptr));
 
   return m_GameObjects.back().get();
+}
+
+void Scene::DestroyObject(GameObject* obj) {
+  if (!obj) {
+    return;
+  }
+
+  obj->Destroy();
+}
+
+void Scene::EnableHierarchy(Entity root, GameObject* obj) {
+  using enum GameObject::Flags;
+
+  obj->DisableObjectFlags(QUEUE_ENABLE);
+  obj->EnableObjectFlags(ENABLED, ENABLED_IN_HIERARCHY);
+
+  m_ECS.AddComponent<ObjectEnabledComponent>(root);
+  auto bc = obj->GetComponent<BehaviorComponent>();
+  if (bc) {
+    bc->behavior->OnEnable();
+  }
+
+  ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::POST>(
+    m_ECS, root, [this, root](HierarchyComponent* hc, Entity e) {
+      if (e == root) {
+        return true;
+      }
+
+      auto ref = m_ECS.GetComponent<GameObjectRef>(e);
+      auto obj = ref->object;
+
+      if (obj->HasObjectFlags(NEW_OBJECT)) {
+        return false;
+      }
+
+      if (obj->HasObjectFlags(QUEUE_DISABLE)) {
+        obj->DisableObjectFlags(ENABLED, ENABLED_IN_HIERARCHY, QUEUE_DISABLE);
+        return false;
+      }
+
+      if (!obj->HasObjectFlags(ENABLED)) {
+        return false;
+      }
+
+      auto bc = obj->GetComponent<BehaviorComponent>();
+
+      if (bc) {
+        bc->behavior->OnEnable();
+      }
+      m_ECS.AddComponent<ObjectEnabledComponent>(e);
+
+      return true;
+    }
+  );
+}
+
+void Scene::DisableHierarachy(Entity root, GameObject* obj) {
+  using enum GameObject::Flags;
+
+  obj->DisableObjectFlags(ENABLED, ENABLED_IN_HIERARCHY, QUEUE_DISABLE);
+  m_ECS.RemoveComponent<ObjectEnabledComponent>(root);
+  auto bc = obj->GetComponent<BehaviorComponent>();
+  if (bc) {
+    bc->behavior->OnDisable();
+  }
+
+  ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::POST>(
+    m_ECS, root, [this, root](HierarchyComponent* hc, Entity e) {
+      if (e == root) {
+        return true;
+      }
+
+      auto ref = m_ECS.GetComponent<GameObjectRef>(e);
+      auto obj = ref->object;
+
+      if (obj->HasObjectFlags(NEW_OBJECT)) {
+        return false;
+      }
+
+      auto bc = obj->GetComponent<BehaviorComponent>();
+
+      if (obj->HasObjectFlags(QUEUE_DISABLE)) {
+        if (obj->HasObjectFlags(ENABLED)) {
+          m_ECS.RemoveComponent<ObjectEnabledComponent>(e);
+          bc->behavior->OnDisable();
+        }
+
+        DisableHierarachy(e, obj);
+        return false;
+      }
+
+      if (!obj->HasObjectFlags(ENABLED)) {
+        obj->DisableObjectFlags(ENABLED_IN_HIERARCHY);
+        return false;
+      }
+
+      if (bc) {
+        bc->behavior->OnDisable();
+      }
+      m_ECS.RemoveComponent<ObjectEnabledComponent>(e);
+
+      return true;
+    }
+  );
 }
 
 void Scene::OnFrameStart() {
@@ -53,31 +159,38 @@ void Scene::OnFrameStart() {
 
   m_ObjCount = m_GameObjects.size();
 
-  for (size_t i = 0; i < m_ObjCount; ++i) {
-    GameObject* obj = m_GameObjects[i].get();
-
-    if (
-      obj->HasObjectFlags(QUEUE_ENABLE) &&
-      !obj->HasObjectFlags(ENABLED, QUEUE_DISABLE)
-    ) {
-      obj->EnableObjectFlags(ENABLED);
-      if (obj->HasObjectFlags(CONTAINS_BEHAVIOR)) {
-        m_ECS.GetComponent<BehaviorComponent>(obj->m_EntityHandle)
-          ->behavior->OnEnable();
+  ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::PRE>(
+    m_ECS, m_RootEntity, [this](HierarchyComponent* hc, Entity e) -> bool {
+      if (e == m_RootEntity) {
+        return true;
       }
-      m_ECS.AddComponent<ObjectEnabledComponent>(obj->m_EntityHandle);
-    }
 
-    obj->DisableObjectFlags(QUEUE_ENABLE, QUEUE_DISABLE);
-  }
+      auto ref = m_ECS.GetComponent<GameObjectRef>(e);
+      auto obj = ref->object;
+
+      if (obj->HasObjectFlags(QUEUE_ENABLE, QUEUE_DISABLE)) {
+        obj->DisableObjectFlags(QUEUE_ENABLE, QUEUE_DISABLE);
+      }
+
+      if (obj->HasObjectFlags(NEW_OBJECT)) {
+        return false;
+      } else if (obj->HasObjectFlags(QUEUE_DISABLE)) {
+        DisableHierarachy(e, obj);
+        return false;
+      } else if (obj->HasObjectFlags(QUEUE_ENABLE)) {
+        EnableHierarchy(e, obj);
+        return true;
+      }
+
+      return true;
+    }
+  );
 }
 
 void Scene::OnUpdate(float dt) {
-  auto snapshot = m_ECS.Snapshot<BehaviorComponent, ObjectEnabledComponent>();
-
-  for (int i = 0; i < Time::GetFixedStepCount(); ++i) {
-    for (Entity e : snapshot) {
-      auto bc = m_ECS.GetComponent<BehaviorComponent>(e);
+  for (size_t i = 0; i < m_ObjCount; ++i) {
+    for (int i = 0; i < Time::GetFixedStepCount(); ++i) {
+      auto* bc = m_ECS.GetComponent<BehaviorComponent>(m_GameObjects[i]->m_EntityHandle);
 
       if (!bc || !bc->behavior) {
         continue;
@@ -92,8 +205,8 @@ void Scene::OnUpdate(float dt) {
     }
   }
 
-  for (Entity e : snapshot) {
-    auto bc = m_ECS.GetComponent<BehaviorComponent>(e);
+  for (size_t i = 0; i < m_ObjCount; ++i) {
+    auto* bc = m_ECS.GetComponent<BehaviorComponent>(m_GameObjects[i]->m_EntityHandle);
 
     if (!bc || !bc->behavior) {
       continue;
@@ -107,11 +220,16 @@ void Scene::OnUpdate(float dt) {
     bc->behavior->OnUpdate();
   }
 
-  for (Entity e : snapshot) {
-    auto bc = m_ECS.GetComponent<BehaviorComponent>(e);
+  for (size_t i = 0; i < m_ObjCount; ++i) {
+    auto* bc = m_ECS.GetComponent<BehaviorComponent>(m_GameObjects[i]->m_EntityHandle);
 
     if (!bc || !bc->behavior) {
       continue;
+    }
+
+    if (!bc->started) {
+      bc->behavior->OnStart();
+      bc->started = true;
     }
 
     bc->behavior->OnLateUpdate();
@@ -124,77 +242,70 @@ void Scene::OnUpdate(float dt) {
 void Scene::OnFrameEnd() {
   using enum GameObject::Flags;
 
-  for (size_t i = 0; i < m_ObjCount; ++i) {
-    GameObject* obj = m_GameObjects[i].get();
-
-    if (obj->HasObjectFlags(ENABLED, QUEUE_DISABLE)) {
-      if (obj->HasObjectFlags(CONTAINS_BEHAVIOR)) {
-        auto bc = obj->GetComponent<BehaviorComponent>();
-        bc->behavior->OnDisable();
+  ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::PRE>(
+    m_ECS, m_RootEntity, [this](HierarchyComponent* hc, Entity e) -> bool {
+      if (m_RootEntity == e) {
+        return true;
       }
 
-      obj->RemoveComponent<ObjectEnabledComponent>();
+      if (m_ECS.GetComponent<GameObjectRef>(e)->object->HasObjectFlags(QUEUE_DESTROY)) {
+        ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::PRE>(
+          m_ECS, e, [this](HierarchyComponent* hc, Entity e) -> bool {
+            auto obj_ref = m_ECS.GetComponent<GameObjectRef>(e)->object;
+            obj_ref->EnableObjectFlags(QUEUE_DESTROY);
 
-      obj->DisableObjectFlags(ENABLED, QUEUE_DISABLE);
-    }
-  }
+            auto bc = m_ECS.GetComponent<BehaviorComponent>(e);
 
-  // Object Destruction
+            if (bc && bc->started) {
+              if (obj_ref->HasObjectFlags(ENABLED_IN_HIERARCHY)) {
+                bc->behavior->OnDisable();
+              }
+              bc->behavior->OnDestroy();
+            }
 
-  // Tag: post-order from each flagged object, so the pool order is children
-  // first
-  for (auto& obj : m_GameObjects) {
-    if (obj->HasObjectFlags(QUEUE_DESTROY)) {
-      ECSSystems::WalkHierarchy<ECSSystems::TreeWalkOrder::POST>(
-        m_ECS, obj->m_EntityHandle, [this](auto, Entity e) {
-          m_ECS.AddComponent<ObjectDestroyComponent>(
-            e
-          );  // no-op if already tagged
-        }
-      );
-    }
-  }
+            return true;
+          }
+        );
 
-  // OnDestroy, children first, tree still intact
-  for (Entity e : m_ECS.Snapshot<ObjectDestroyComponent>()) {
-    if (
-      auto* bc = m_ECS.GetComponent<BehaviorComponent>(e); bc && bc->behavior
-    ) {
-      bc->behavior->OnDestroy();
-    }
-  }
+        return false;
+      }
 
-  // Unlink the top of each deleted subtree from its surviving parent
-  for (Entity e : m_ECS.Snapshot<ObjectDestroyComponent>()) {
-    Entity parent = m_ECS.GetComponent<HierarchyComponent>(e)->parent;
-    if (!m_ECS.HasComponent<ObjectDestroyComponent>(parent)) {
-      ECSSystems::DetachNodeFromOthers(m_ECS, e);
-    }
-  }
-
-  // Delete all objects tagged with destruction
-  std::erase_if(m_GameObjects, [this](const std::unique_ptr<GameObject>& obj) {
-    if (m_ECS.HasComponent<ObjectDestroyComponent>(obj->m_EntityHandle)) {
-      m_ECS.DeleteEntity(obj->m_EntityHandle);
       return true;
     }
+  );
 
-    return false;
-  });
+  for (size_t i = 0; i < m_GameObjects.size();) {
+    if (m_GameObjects[i]->HasObjectFlags(QUEUE_DESTROY)) {
+      m_ECS.DeleteEntity(m_GameObjects[i]->m_EntityHandle);
+
+      m_GameObjects[i] = std::move(m_GameObjects.back());
+      m_GameObjects.pop_back();
+    } else {
+      ++i;
+    }
+  }
 
   m_ECS.FlushRemoval();
+
+  for (auto& obj : m_GameObjects) {
+    obj->DisableObjectFlags(NEW_OBJECT);
+  }
 }
 
 void Scene::UnloadAllObjects() {
+  using enum GameObject::Flags;
+
   for (auto& obj : m_GameObjects) {
-    if (obj->HasObjectFlags(GameObject::Flags::CONTAINS_BEHAVIOR)) {
-      auto bc = obj->GetComponent<BehaviorComponent>();
-      bc->behavior->OnDestroy();
+    if (obj->HasObjectFlags(CONTAINS_BEHAVIOR)) {
+      obj->GetComponent<BehaviorComponent>()->behavior->OnDestroy();
     }
+
+    obj->GetComponent<GameObjectRef>()->object = nullptr;
 
     m_ECS.DeleteEntity(obj->m_EntityHandle);
   }
 
+  m_ECS.FlushRemoval();
   m_GameObjects.clear();
 }
 
@@ -205,5 +316,4 @@ void Scene::OnRender(Renderer2D& renderer) {
 ECSRegistry& Scene::GetECS() {
   return m_ECS;
 }
-
 }

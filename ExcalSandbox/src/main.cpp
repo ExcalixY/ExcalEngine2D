@@ -43,28 +43,29 @@ constexpr float TOKEN_SCALE = 0.3f;
 
 class LoggedBehavior : public Behavior {
 public:
-  explicit LoggedBehavior(GameObject& obj) : Behavior(obj) { }
+  explicit LoggedBehavior(GameObject& obj, Scene& scene)
+      : Behavior(obj, scene) { }
 
   void OnEnable() override {
-    Debug::Log("[{}] OnEnable", m_GameObject.GetName());
+    Debug::Log("[{}] OnEnable", gameObject.GetName());
   }
 
   void OnDisable() override {
-    Debug::Log("[{}] OnDisable", m_GameObject.GetName());
+    Debug::Log("[{}] OnDisable", gameObject.GetName());
   }
 
   void OnDestroy() override {
-    Debug::Log("[{}] OnDestroy", m_GameObject.GetName());
+    Debug::Log("[{}] OnDestroy", gameObject.GetName());
   }
 };
 
 class TokenSpin : public LoggedBehavior {
 public:
-  TokenSpin(GameObject& obj, ECSRegistry& ecs, float speed)
-      : LoggedBehavior(obj), m_Speed(speed) { }
+  TokenSpin(GameObject& obj, Scene& scene, float speed)
+      : LoggedBehavior(obj, scene), m_Speed(speed) { }
 
   void OnUpdate() override {
-    m_Transform->rot += m_Speed * Time::GetDeltaTime();
+    transform->rot += m_Speed * Time::GetDeltaTime();
   }
 
 private:
@@ -74,8 +75,8 @@ private:
 // Reads "<prefix>Move", "<prefix>Rotate" and "<prefix>Scale"
 class TransformController : public LoggedBehavior {
 public:
-  TransformController(GameObject& obj, ECSRegistry& ecs, std::string prefix)
-      : LoggedBehavior(obj), m_Prefix(std::move(prefix)) { }
+  TransformController(GameObject& obj, Scene& scene, std::string prefix)
+      : LoggedBehavior(obj, scene), m_Prefix(std::move(prefix)) { }
 
   void OnUpdate() override {
     float dt = Time::GetDeltaTime();
@@ -84,14 +85,14 @@ public:
     if (glm::length(direction) > 1.f) {
       direction = glm::normalize(direction);
     }
-    m_Transform->pos += direction * MOVE_SPEED * dt;
+    transform->pos += direction * MOVE_SPEED * dt;
 
-    m_Transform->rot += Input::GetAxis(m_Prefix + "Rotate") * ROTATE_SPEED * dt;
+    transform->rot += Input::GetAxis(m_Prefix + "Rotate") * ROTATE_SPEED * dt;
 
     float growth =
       std::exp(Input::GetAxis(m_Prefix + "Scale") * SCALE_SPEED * dt);
-    m_Transform->scale =
-      glm::max(m_Transform->scale * growth, glm::vec2(MIN_SCALE));
+    transform->scale =
+      glm::max(transform->scale * growth, glm::vec2(MIN_SCALE));
   }
 
 private:
@@ -151,7 +152,7 @@ private:
       SpriteRenderer* sprite = token->AddComponent<SpriteRenderer>();
       sprite->texture = texture;
       sprite->source = SDL_FRect{0.f, 0.f, 64.f, 72.f};
-      sprite->layer = 1;
+      sprite->drawOrder = 1;
 
       AttachBehavior<TokenSpin>(token, i % 2 == 0 ? 3.f : -3.f);
     }
